@@ -10,6 +10,26 @@ TortoiseGMManager turns the server's dot-prefixed GM commands into a small searc
 
 The addon is **client-side only**. It does not connect directly to MariaDB and does not bypass server permissions. Commands are sent through the normal GM chat-command path; the world server remains authoritative for access level, syntax, and database state.
 
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="assets/screenshots/favourites.webp" alt="Favourite commands tab" width="440"><br>
+      <sub><b>Favourites</b> — keep frequently used actions together.</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="assets/screenshots/search.webp" alt="Command search results" width="440"><br>
+      <sub><b>Search</b> — filter the command catalogue as you type.</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="assets/screenshots/item-lookup.webp" alt="Item lookup results and tooltip" width="760"><br>
+  <sub><b>Item lookup</b> — search by partial name, inspect item details, and act on the selected result.</sub>
+</p>
+
 ## Features
 
 - Compact structured command palette sized for common 1024x768 Vanilla layouts.
