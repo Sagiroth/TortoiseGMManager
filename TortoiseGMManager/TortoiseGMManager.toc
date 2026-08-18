@@ -1,0 +1,12 @@
+## Interface: 11200
+## Title: TortoiseGMManager
+## Notes: Compact GM command manager with searchable server-backed lookups for Tortoise WoW 1.18.1.
+## Author: Sagiroth + ChatGPT
+## Version: 0.4.0
+## SavedVariables: TortoiseGMManagerDB
+
+Data.lua
+Core.lua
+Lookup.lua
+UI.lua
+ResultsUI.lua
