@@ -28,9 +28,9 @@ end
 
 DEFAULT_CHAT_FRAME = nil
 
-dofile("TortoiseGMManager/Data.lua")
-dofile("TortoiseGMManager/Core.lua")
-dofile("TortoiseGMManager/Lookup.lua")
+dofile("Data.lua")
+dofile("Core.lua")
+dofile("Lookup.lua")
 
 -- Keep the behavioral assertions readable while exercising the renamed addon.
 local TortoiseGM = TortoiseGMManager

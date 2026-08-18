@@ -29,8 +29,8 @@ jobs:
 
       - name: Lua syntax
         run: |
-          npx --yes luaparse -q TortoiseGMManager/Data.lua
-          npx --yes luaparse -q TortoiseGMManager/Core.lua
-          npx --yes luaparse -q TortoiseGMManager/Lookup.lua
-          npx --yes luaparse -q TortoiseGMManager/UI.lua
-          npx --yes luaparse -q TortoiseGMManager/ResultsUI.lua
+          npx --yes luaparse -q Data.lua
+          npx --yes luaparse -q Core.lua
+          npx --yes luaparse -q Lookup.lua
+          npx --yes luaparse -q UI.lua
+          npx --yes luaparse -q ResultsUI.lua
