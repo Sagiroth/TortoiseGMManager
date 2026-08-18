@@ -110,6 +110,7 @@ main:SetPoint(TortoiseGMManagerDB.framePoint or "CENTER", UIParent, TortoiseGMMa
 main:SetFrameStrata("DIALOG")
 main:SetMovable(true)
 main:EnableMouse(true)
+main:EnableMouseWheel(true)
 main:RegisterForDrag("LeftButton")
 main:SetScript("OnDragStart", function() this:StartMoving() end)
 main:SetScript("OnDragStop", function() this:StopMovingOrSizing(); saveMainPosition(this) end)
@@ -153,7 +154,7 @@ divider:SetHeight(1)
 
 local searchLabel = main:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 searchLabel:SetPoint("TOPLEFT", main, "TOPLEFT", CONTENT_LEFT + 2, -50)
-searchLabel:SetText("Search")
+searchLabel:SetText("Filter actions")
 setFontColor(searchLabel, COLORS.muted)
 
 local searchBox = CreateFrame("EditBox", "TortoiseGMManagerSearchBox", main, "InputBoxTemplate")
@@ -194,6 +195,7 @@ for categoryIndex = 1, table.getn(TortoiseGMManager.categories) do
         TortoiseGMManager.currentCategory = this.categoryId
         TortoiseGMManagerDB.lastCategory = this.categoryId
         TortoiseGMManager.page = 1
+        searchBox:SetText("")
         TortoiseGMManager.ClearPendingConfirmation()
         TortoiseGMManager.RefreshCategoryButtons()
         TortoiseGMManager.RefreshList()
@@ -321,9 +323,15 @@ nextButton:SetScript("OnClick", function()
 end)
 TortoiseGMManager.nextButton = nextButton
 
+main:SetScript("OnMouseWheel", function()
+    local delta = arg1 or 0
+    if delta > 0 and TortoiseGMManager.page > 1 then TortoiseGMManager.page = TortoiseGMManager.page - 1; TortoiseGMManager.RefreshList()
+    elseif delta < 0 and TortoiseGMManager.page < TortoiseGMManager.pageCount then TortoiseGMManager.page = TortoiseGMManager.page + 1; TortoiseGMManager.RefreshList() end
+end)
+
 local composer = CreateFrame("Frame", nil, main)
 composer:SetPoint("BOTTOMLEFT", main, "BOTTOMLEFT", CONTENT_LEFT, 12)
-composer:SetWidth(CONTENT_WIDTH); composer:SetHeight(86)
+composer:SetWidth(CONTENT_WIDTH); composer:SetHeight(105)
 applyBackdrop(composer, 0.82, 0.75)
 
 local composerLabel = composer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -332,7 +340,7 @@ composerLabel:SetText("COMMAND")
 setFontColor(composerLabel, COLORS.muted)
 
 local commandBox = CreateFrame("EditBox", "TortoiseGMManagerCommandBox", composer, "InputBoxTemplate")
-commandBox:SetWidth(318); commandBox:SetHeight(23)
+commandBox:SetWidth(380); commandBox:SetHeight(23)
 commandBox:SetPoint("TOPLEFT", composer, "TOPLEFT", 12, -22)
 commandBox:SetAutoFocus(false)
 commandBox:SetScript("OnEscapePressed", function() this:ClearFocus() end)
@@ -343,15 +351,31 @@ commandBox:SetScript("OnTextChanged", function()
 end)
 TortoiseGMManager.commandBox = commandBox
 
-local lookupButton = CreateFrame("Button", nil, composer, "UIPanelButtonTemplate")
-lookupButton:SetWidth(54); lookupButton:SetHeight(24)
-lookupButton:SetPoint("LEFT", commandBox, "RIGHT", 6, 0)
-lookupButton:SetText("FIND"); lookupButton:Disable()
-lookupButton:SetScript("OnClick", function() TortoiseGMManager.ExecuteLookup(TortoiseGMManager.selectedEntry, commandBox:GetText()) end)
+local lookupLabel = composer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+lookupLabel:SetPoint("TOPLEFT", composer, "TOPLEFT", 9, -50)
+lookupLabel:SetWidth(115); lookupLabel:SetJustifyH("LEFT")
+lookupLabel:SetText("LOOKUP")
+setFontColor(lookupLabel, COLORS.muted)
+
+local lookupButton
+local lookupBox = CreateFrame("EditBox", "TortoiseGMManagerLookupBox", composer, "InputBoxTemplate")
+lookupBox:SetWidth(300); lookupBox:SetHeight(23)
+lookupBox:SetPoint("TOPLEFT", composer, "TOPLEFT", 120, -44)
+lookupBox:SetAutoFocus(false)
+lookupBox:SetScript("OnEscapePressed", function() this:ClearFocus() end)
+lookupBox:SetScript("OnEnterPressed", function() if lookupButton:IsEnabled() then TortoiseGMManager.ExecuteLookup(TortoiseGMManager.selectedEntry, this:GetText()) end end)
+lookupBox:SetScript("OnTextChanged", function() if TortoiseGMManager.RefreshLookupState then TortoiseGMManager.RefreshLookupState() end end)
+TortoiseGMManager.lookupBox = lookupBox
+
+lookupButton = CreateFrame("Button", nil, composer, "UIPanelButtonTemplate")
+lookupButton:SetWidth(68); lookupButton:SetHeight(24)
+lookupButton:SetPoint("LEFT", lookupBox, "RIGHT", 6, 0)
+lookupButton:SetText("SEARCH"); lookupButton:Disable()
+lookupButton:SetScript("OnClick", function() TortoiseGMManager.ExecuteLookup(TortoiseGMManager.selectedEntry, lookupBox:GetText()) end)
 lookupButton:SetScript("OnEnter", function()
     GameTooltip:SetOwner(this, "ANCHOR_TOP")
     if TortoiseGMManager.selectedEntry and TortoiseGMManager.selectedEntry.lookupCommand then
-        GameTooltip:SetText("Find by name")
+        GameTooltip:SetText("Search by name or ID")
         GameTooltip:AddLine("Uses " .. TortoiseGMManager.selectedEntry.lookupCommand .. " and keeps the action loaded.", 1, 1, 1, true)
     else GameTooltip:SetText("No lookup for this command") end
     GameTooltip:Show()
@@ -361,12 +385,13 @@ TortoiseGMManager.lookupButton = lookupButton
 
 function TortoiseGMManager.RefreshLookupState()
     local entry = TortoiseGMManager.selectedEntry
-    if entry and entry.lookupCommand and TortoiseGMManager.CommandMatchesEntry(entry, commandBox:GetText()) then lookupButton:Enable() else lookupButton:Disable() end
+    local query = trim(lookupBox:GetText())
+    if entry and entry.lookupCommand and query ~= "" and TortoiseGMManager.CommandMatchesEntry(entry, commandBox:GetText()) then lookupButton:Enable() else lookupButton:Disable() end
 end
 
 local runButton = CreateFrame("Button", nil, composer, "UIPanelButtonTemplate")
 runButton:SetWidth(55); runButton:SetHeight(24)
-runButton:SetPoint("LEFT", lookupButton, "RIGHT", 5, 0)
+runButton:SetPoint("LEFT", commandBox, "RIGHT", 6, 0)
 runButton:SetText("RUN")
 runButton:SetScript("OnClick", function() TortoiseGMManager.Execute(commandBox:GetText()) end)
 
@@ -374,11 +399,11 @@ local helpButton = CreateFrame("Button", nil, composer, "UIPanelButtonTemplate")
 helpButton:SetWidth(50); helpButton:SetHeight(24)
 helpButton:SetPoint("LEFT", runButton, "RIGHT", 5, 0)
 helpButton:SetText("Help")
-helpButton:SetScript("OnClick", function() TortoiseGMManager.RequestHelp(commandBox:GetText()) end)
+helpButton:SetScript("OnClick", function() TortoiseGMManager.RequestHelp(TortoiseGMManager.selectedEntry or commandBox:GetText()) end)
 
 local hintText = composer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-hintText:SetPoint("TOPLEFT", commandBox, "BOTTOMLEFT", 0, -3)
-hintText:SetWidth(532); hintText:SetHeight(14); hintText:SetJustifyH("LEFT")
+hintText:SetPoint("TOPLEFT", composer, "TOPLEFT", 10, -72)
+hintText:SetWidth(532); hintText:SetHeight(11); hintText:SetJustifyH("LEFT")
 hintText:SetText("Choose an action above, or type any .command manually.")
 setFontColor(hintText, COLORS.muted)
 TortoiseGMManager.hintText = hintText
@@ -409,13 +434,17 @@ function TortoiseGMManager.SetComposer(entry)
     commandBox:SetText(command)
     local hint = ""
     if entry.hint and entry.hint ~= "" then hint = "Args: " .. entry.hint end
+    lookupBox:SetText("")
     if entry.lookupCommand then
-        if hint ~= "" then hint = hint .. "  |  " end
-        hint = hint .. "FIND by name"
-    end
+        local lookupPrompt = string.upper(entry.lookupHint or "NAME OR ID")
+        if entry.lookupCommand == ".lookup item" then lookupPrompt = "ITEM NAME OR ID" end
+        lookupLabel:SetText(lookupPrompt)
+        hint = hint .. (hint ~= "" and "  |  " or "") .. "Search by name or enter an ID directly"
+    else lookupLabel:SetText("LOOKUP") end
     hintText:SetText(hint)
     TortoiseGMManager.RefreshLookupState()
-    if not entry.direct and entry.hint and entry.hint ~= "" then commandBox:SetFocus() end
+    if entry.lookupCommand then lookupBox:SetFocus()
+    elseif not entry.direct and entry.hint and entry.hint ~= "" then commandBox:SetFocus() end
 end
 
 function TortoiseGMManager.LoadCommand(command, entry, hint)
@@ -502,9 +531,15 @@ end
 
 function TortoiseGMManager.HideUI()
     main:Hide()
-    if TortoiseGMManager.HideLookupResults then TortoiseGMManager.HideLookupResults() end
-    TortoiseGMManager.ClearPendingConfirmation()
 end
+
+main:SetScript("OnHide", function()
+    if TortoiseGMManager.HideLookupResults then TortoiseGMManager.HideLookupResults(true) end
+    if TortoiseGMManager.pendingLookup and TortoiseGMManager.EndLookup then TortoiseGMManager.EndLookup("dismissed") end
+    TortoiseGMManager.ClearPendingConfirmation()
+    TortoiseGMManager.selectedEntry = nil
+    commandBox:ClearFocus(); lookupBox:ClearFocus(); searchBox:ClearFocus()
+end)
 
 function TortoiseGMManager.ToggleUI()
     if main:IsVisible() then TortoiseGMManager.HideUI() else TortoiseGMManager.ShowUI() end
@@ -534,11 +569,15 @@ local function updateMinimapButtonPosition()
 end
 
 minimapButton:SetScript("OnDragStart", function()
+    TortoiseGMManager.minimapWasDragged = false
     if not IsShiftKeyDown() then return end
     TortoiseGMManager.minimapDragging = true; TortoiseGMManager.minimapWasDragged = true
     this:SetScript("OnUpdate", updateMinimapButtonPosition)
 end)
-minimapButton:SetScript("OnDragStop", function() TortoiseGMManager.minimapDragging = false; this:SetScript("OnUpdate", nil); updateMinimapButtonPosition() end)
+minimapButton:SetScript("OnDragStop", function()
+    if not TortoiseGMManager.minimapDragging then return end
+    TortoiseGMManager.minimapDragging = false; this:SetScript("OnUpdate", nil); updateMinimapButtonPosition()
+end)
 minimapButton:SetScript("OnClick", function()
     if TortoiseGMManager.minimapWasDragged then TortoiseGMManager.minimapWasDragged = false; return end
     TortoiseGMManager.ToggleUI()

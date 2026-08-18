@@ -51,6 +51,7 @@ frame:SetHeight(RESULT_HEIGHT)
 frame:SetFrameStrata("DIALOG")
 frame:SetMovable(true)
 frame:EnableMouse(true)
+frame:EnableMouseWheel(true)
 frame:RegisterForDrag("LeftButton")
 frame:SetScript("OnDragStart", function() this:StartMoving() end)
 frame:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
@@ -79,6 +80,7 @@ setFontColor(title, COLORS.gold)
 
 local closeButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
 closeButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -3, -3)
+closeButton:SetScript("OnClick", function() TortoiseGMManager.DismissLookupResults(); frame:Hide() end)
 
 local contextText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 contextText:SetPoint("TOPLEFT", frame, "TOPLEFT", 14, -39)
@@ -129,8 +131,7 @@ for rowIndex = 1, RESULTS_PER_PAGE do
             TortoiseGMManager.SetStatus("This result has no default action. Its ID is " .. tostring(result.id) .. ".", "info")
             return
         end
-        local pending = TortoiseGMManager.pendingLookup
-        local sourceEntry = pending and pending.sourceEntry or nil
+        local sourceEntry = result.sourceEntry
         local label = result.name .. "  (#" .. tostring(result.id) .. ")"
         TortoiseGMManager.LoadCommand(command, sourceEntry, label .. " loaded from lookup. Review, then RUN.")
         frame:Hide()
@@ -184,15 +185,14 @@ function TortoiseGMManager.RefreshLookupResults()
     if TortoiseGMManager.lookupResultsPage > pageCount then TortoiseGMManager.lookupResultsPage = pageCount end
     if TortoiseGMManager.lookupResultsPage < 1 then TortoiseGMManager.lookupResultsPage = 1 end
 
-    local pending = TortoiseGMManager.pendingLookup
-    if pending then
-        local context = pending.lookupCommand or "lookup"
-        if pending.query and pending.query ~= "" then context = context .. "  '" .. pending.query .. "'" end
-        if pending.sourceEntry and pending.sourceEntry.label then context = context .. "  ->  " .. pending.sourceEntry.label end
+    local session = TortoiseGMManager.pendingLookup or TortoiseGMManager.lastLookupSession
+    if not session and count > 0 then session = results[1].context end
+    if session then
+        local context = session.lookupCommand or "lookup"
+        if session.query and session.query ~= "" then context = context .. "  '" .. session.query .. "'" end
+        if session.sourceEntry and session.sourceEntry.label then context = context .. "  ->  " .. session.sourceEntry.label end
         contextText:SetText(context)
-    else
-        contextText:SetText("Last captured lookup")
-    end
+    else contextText:SetText("Lookup results") end
 
     local startIndex = ((TortoiseGMManager.lookupResultsPage - 1) * RESULTS_PER_PAGE) + 1
     for rowIndex = 1, RESULTS_PER_PAGE do
@@ -211,7 +211,10 @@ function TortoiseGMManager.RefreshLookupResults()
     end
 
     pageText:SetText(tostring(TortoiseGMManager.lookupResultsPage) .. " / " .. tostring(pageCount))
-    countText:SetText(tostring(count) .. (count == 1 and " result" or " results"))
+    if count > 0 then countText:SetText(tostring(count) .. (count == 1 and " result" or " results"))
+    elseif session and session.state == "searching" then countText:SetText("Searching...")
+    elseif session and session.state == "timedout" then countText:SetText("Timed out - no results")
+    else countText:SetText("No results") end
     if TortoiseGMManager.lookupResultsPage <= 1 then prevButton:Disable() else prevButton:Enable() end
     if TortoiseGMManager.lookupResultsPage >= pageCount then nextButton:Disable() else nextButton:Enable() end
 end
@@ -238,15 +241,27 @@ function TortoiseGMManager.ShowLookupResults()
     frame:Show()
 end
 
-function TortoiseGMManager.HideLookupResults()
+function TortoiseGMManager.HideLookupResults(dismiss)
+    if dismiss then TortoiseGMManager.DismissLookupResults() end
     frame:Hide()
 end
+
+frame:SetScript("OnMouseWheel", function()
+    local delta = arg1 or 0
+    if delta > 0 then prevButton:GetScript("OnClick")() else nextButton:GetScript("OnClick")() end
+end)
 
 TortoiseGMManager.OnLookupStarted = function()
     TortoiseGMManager.lookupResultsPage = 1
     TortoiseGMManager.RefreshLookupResults()
+    frame:Show()
 end
 
 TortoiseGMManager.OnLookupResultsChanged = function()
     TortoiseGMManager.RefreshLookupResults()
+end
+
+TortoiseGMManager.OnLookupEnded = function()
+    TortoiseGMManager.RefreshLookupResults()
+    if not TortoiseGMManager.lookupResultsDismissed then frame:Show() end
 end

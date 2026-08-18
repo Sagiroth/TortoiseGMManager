@@ -16,7 +16,7 @@ The addon is **client-side only**. It does not connect directly to MariaDB and d
 - Draggable minimap launcher; **Shift-drag** moves it and the position is saved.
 - `/tgmm` opens the manager.
 - Quick, All, Travel, Player, World, Lookup, Admin, Danger and History categories.
-- Search across labels, commands, argument hints and lookup metadata.
+- **Filter actions** searches the catalogue with label-first ranking; it never changes the executable command.
 - Stock Vanilla WoW icons and textures inside the addon; no Ace or LibDBIcon dependency.
 - Exact GM command is visible before execution.
 - Current target is shown in the header.
@@ -28,12 +28,12 @@ The addon is **client-side only**. It does not connect directly to MariaDB and d
 
 ## Database-aware lookup browser
 
-Many GM commands require an ID even when you only know a name. TortoiseGMManager adds **FIND** to those workflows.
+Many GM commands require an ID even when you only know a name. Lookup-capable actions expose a dedicated name-or-ID field and **SEARCH** button, separate from the executable command bar.
 
 Example:
 
 ```text
-Add item -> type: thunderfury -> FIND
+Add item -> type thunderfury in ITEM NAME OR ID -> SEARCH
 ```
 
 The addon sends:
@@ -58,7 +58,7 @@ event      -> .event info <id>
 itemset    -> .additemset <id>
 ```
 
-When FIND is launched from a specific action such as **Quest add**, **NPC add**, **Delete item**, **Add item set**, **Cast**, or **Set skill**, the selected result is loaded back into that original action instead.
+When SEARCH is launched from a specific action such as **Quest add**, **NPC add**, **Delete item**, **Add item set**, **Cast**, or **Set skill**, the selected result is loaded back into that original action instead.
 
 The parser listens to `CHAT_MSG_SYSTEM`; it does not monkey-patch chat-frame `AddMessage` methods and does not suppress the original server response.
 
@@ -66,7 +66,7 @@ The parser listens to `CHAT_MSG_SYSTEM`; it does not monkey-patch chat-frame `Ad
 
 The catalogue is checked against the command registry in the Shyalya `playerbots-integration-gh` branch built by `TortoiseWoWServer` by default.
 
-Current development coverage is **126 presets** with **21 FIND mappings**, including:
+Current development coverage is **126 presets** with **21 SEARCH mappings**, including:
 
 - GM mode, visibility, god mode, GPS, revive, replenish, repair, bank, mailbox and combat utilities.
 - Saved teleports, player teleport/summon, coordinate movement, hover, waterwalk and taxi utilities.
@@ -123,10 +123,11 @@ The icon position and main-window position are saved automatically.
 1. Select a player, NPC or object when the command is target-oriented.
 2. Pick a category or use **All** and search.
 3. **Run** executes commands that need no extra arguments.
-4. **Use** loads a parameterized command into the command bar.
-5. **FIND** resolves human-readable names through server-side lookup when available.
-6. Click a lookup result to load its ID into the originating action.
-7. Review the exact command and press **RUN**.
+4. **Use** loads a parameterized command into the executable command bar.
+5. For lookup-capable actions, type a name or ID in the dedicated lookup field and press **SEARCH** (Enter also searches).
+6. Numeric IDs compose the originating action immediately; names are resolved through server-side lookup.
+7. Click a lookup result to load its ID into the originating action. This never executes it.
+8. Review the exact command and press **RUN**.
 
 For server-specific syntax, hover the action or click `?` to request `.help` directly from the server.
 
@@ -159,7 +160,7 @@ src/game/Commands/Commands.cpp
 src/game/ObjectMgr.cpp
 ```
 
-`tests/verify_server_catalog.py` reconstructs the nested server command table and verifies addon presets, FIND routes, and displayed access levels against the configured source.
+`tests/verify_server_catalog.py` reconstructs the nested server command table and verifies addon presets, SEARCH routes, and displayed access levels against the configured source.
 
 ## Project structure
 

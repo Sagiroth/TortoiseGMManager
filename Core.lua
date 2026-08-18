@@ -145,20 +145,31 @@ function TortoiseGMManager.Execute(command)
     return true
 end
 
-function TortoiseGMManager.RequestHelp(command)
+function TortoiseGMManager.RequestHelp(value)
+    local command
+    if type(value) == "table" then
+        command = value.command
+    else
+        command = value
+        local normalized = TortoiseGMManager.NormalizeCommand(command)
+        local best = nil
+        local i
+        for i = 1, table.getn(TortoiseGMManager.commands or {}) do
+            local entry = TortoiseGMManager.commands[i]
+            if TortoiseGMManager.CommandMatchesEntry(entry, normalized) and (not best or string.len(entry.command) > string.len(best.command)) then
+                best = entry
+            end
+        end
+        if best then command = best.command end
+    end
     command = TortoiseGMManager.NormalizeCommand(command)
     if command == "" or command == "." then
-        if TortoiseGMManager.SetStatus then
-            TortoiseGMManager.SetStatus("Choose or enter a command first.", "error")
-        end
-        return
+        if TortoiseGMManager.SetStatus then TortoiseGMManager.SetStatus("Choose an action first.", "error") end
+        return false
     end
-
-    local body = string.sub(command, 2)
-    SendChatMessage(".help " .. body, "SAY")
-    if TortoiseGMManager.SetStatus then
-        TortoiseGMManager.SetStatus("Requested server help for: " .. command, "info")
-    end
+    SendChatMessage(".help " .. string.sub(command, 2), "SAY")
+    if TortoiseGMManager.SetStatus then TortoiseGMManager.SetStatus("Requested server help for: " .. command, "info") end
+    return true
 end
 
 function TortoiseGMManager.GetHistoryCommands()
@@ -168,7 +179,17 @@ function TortoiseGMManager.GetHistoryCommands()
     for i = 1, table.getn(TortoiseGMManagerDB.history) do
         table.insert(results, {
             category = "history",
-            label = "Recent " .. tostring(i),
+            label = (function()
+                local command = TortoiseGMManagerDB.history[i]
+                local best = nil
+                local j
+                for j = 1, table.getn(TortoiseGMManager.commands or {}) do
+                    local entry = TortoiseGMManager.commands[j]
+                    if TortoiseGMManager.CommandMatchesEntry(entry, command) and (not best or string.len(entry.command) > string.len(best.command)) then best = entry end
+                end
+                if best then return best.label .. " (recent)" end
+                return "Recent " .. tostring(i)
+            end)(),
             command = TortoiseGMManagerDB.history[i],
             detail = "Previously executed command.",
             access = "History",
@@ -180,32 +201,34 @@ function TortoiseGMManager.GetHistoryCommands()
 end
 
 function TortoiseGMManager.GetFilteredCommands(category, query)
-    local source
-    if category == "history" then
-        source = TortoiseGMManager.GetHistoryCommands()
-    else
-        source = TortoiseGMManager.commands or {}
-    end
-
+    local source = category == "history" and TortoiseGMManager.GetHistoryCommands() or (TortoiseGMManager.commands or {})
     local normalizedQuery = lower(trim(query))
+    local ranked = { {}, {}, {}, {}, {} }
     local results = {}
     local i
-
     for i = 1, table.getn(source) do
         local entry = source[i]
         local inCategory = category == "history" or category == "all" or entry.category == category
         if inCategory then
-            if normalizedQuery == "" then
-                table.insert(results, entry)
+            if normalizedQuery == "" then table.insert(results, entry)
             else
-                local haystack = lower((entry.label or "") .. " " .. (entry.command or "") .. " " .. (entry.hint or "") .. " " .. (entry.detail or "") .. " " .. (entry.lookupCommand or "") .. " " .. (entry.lookupHint or ""))
-                if string.find(haystack, normalizedQuery, 1, true) then
-                    table.insert(results, entry)
-                end
+                local label = lower(entry.label or "")
+                local command = lower(entry.command or "")
+                local details = lower((entry.hint or "") .. " " .. (entry.detail or "") .. " " .. (entry.lookupCommand or "") .. " " .. (entry.lookupHint or ""))
+                local rank = nil
+                if label == normalizedQuery then rank = 1
+                elseif string.sub(label, 1, string.len(normalizedQuery)) == normalizedQuery then rank = 2
+                elseif string.find(label, normalizedQuery, 1, true) then rank = 3
+                elseif string.find(command, normalizedQuery, 1, true) then rank = 4
+                elseif string.find(details, normalizedQuery, 1, true) then rank = 5 end
+                if rank then table.insert(ranked[rank], entry) end
             end
         end
     end
-
+    if normalizedQuery ~= "" then
+        local rank, j
+        for rank = 1, 5 do for j = 1, table.getn(ranked[rank]) do table.insert(results, ranked[rank][j]) end end
+    end
     return results
 end
 
@@ -245,30 +268,29 @@ function TortoiseGMManager.GetComposerArgs(entry, command)
     return command
 end
 
-function TortoiseGMManager.ExecuteLookup(entry, command)
+function TortoiseGMManager.BuildLookupCommand(entry, query)
+    if not entry or not entry.lookupCommand then return nil end
+    query = trim(query)
+    if query == "" then return nil end
+    return TortoiseGMManager.NormalizeCommand(entry.lookupCommand .. " " .. query)
+end
+
+function TortoiseGMManager.ExecuteLookup(entry, query)
     if not entry or not entry.lookupCommand then
-        if TortoiseGMManager.SetStatus then
-            TortoiseGMManager.SetStatus("This command has no name lookup configured.", "error")
-        end
+        if TortoiseGMManager.SetStatus then TortoiseGMManager.SetStatus("This action has no lookup configured.", "error") end
         return false
     end
-
-    if not TortoiseGMManager.CommandMatchesEntry(entry, command) then
-        if TortoiseGMManager.SetStatus then
-            TortoiseGMManager.SetStatus("FIND is disabled because the command bar no longer matches the selected action.", "error")
-        end
-        return false
-    end
-
-    local query = TortoiseGMManager.GetComposerArgs(entry, command)
+    query = trim(query)
     if query == "" then
-        if TortoiseGMManager.SetStatus then
-            TortoiseGMManager.SetStatus("Type " .. (entry.lookupHint or "a name") .. " after the command, then click FIND.", "info")
-        end
+        if TortoiseGMManager.SetStatus then TortoiseGMManager.SetStatus("Type " .. (entry.lookupHint or "a name or ID") .. ", then click SEARCH.", "info") end
         return false
     end
-
-    local lookup = TortoiseGMManager.NormalizeCommand(entry.lookupCommand .. " " .. query)
+    if string.find(query, "^%d+$") then
+        local command = TortoiseGMManager.Compose(entry, query)
+        if TortoiseGMManager.LoadCommand then TortoiseGMManager.LoadCommand(command, entry, "Numeric ID loaded directly. Review, then RUN.") end
+        return true
+    end
+    local lookup = TortoiseGMManager.BuildLookupCommand(entry, query)
     if string.len(lookup) > 255 then
         if TortoiseGMManager.SetStatus then
             TortoiseGMManager.SetStatus("Lookup is longer than the Vanilla chat limit (255 characters).", "error")

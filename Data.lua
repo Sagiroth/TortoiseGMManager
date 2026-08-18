@@ -161,6 +161,8 @@ TortoiseGMManager.safeCommands = {
 TortoiseGMManager.dangerPrefixes = {
     ".server restart",
     ".server shutdown",
+    ".server idlerestart",
+    ".server idleshutdown",
     ".server resetallraids",
     ".ban",
     ".unban",

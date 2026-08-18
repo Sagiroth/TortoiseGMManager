@@ -59,6 +59,8 @@ expectEqual(TortoiseGMDB.frameY, 15, "default frame Y offset")
 
 -- Safety semantics should match command tokens, not arbitrary string prefixes.
 expectTrue(TortoiseGM.IsDangerous(".server restart 10"), "restart is dangerous")
+expectTrue(TortoiseGM.IsDangerous(".server idlerestart 10"), "idle restart is dangerous")
+expectTrue(TortoiseGM.IsDangerous(".server idleshutdown 10"), "idle shutdown is dangerous")
 expectFalse(TortoiseGM.IsDangerous(".server restart cancel"), "restart cancel is safe")
 expectFalse(TortoiseGM.IsDangerous(".kickstarter"), "unrelated command sharing .kick prefix is safe")
 expectTrue(TortoiseGM.IsDangerous(".kick PlayerName"), "kick command is dangerous")
@@ -76,11 +78,10 @@ for dangerIndex = 1, table.getn(TortoiseGM.commands) do
     end
 end
 
--- FIND must never reinterpret an unrelated manual command using stale selection metadata.
+-- Lookup uses an explicit query and never derives it from executable command arguments.
 local lookupEntry = { command = ".additem", lookupCommand = ".lookup item", lookupHint = "an item name" }
-local sentBeforeMismatchedLookup = table.getn(sent)
-expectFalse(TortoiseGM.ExecuteLookup(lookupEntry, ".cast Fireball"), "mismatched composer command blocks lookup")
-expectEqual(table.getn(sent), sentBeforeMismatchedLookup, "mismatched lookup sends no chat command")
+expectEqual(TortoiseGM.BuildLookupCommand(lookupEntry, "Thunderfury"), ".lookup item Thunderfury", "builds lookup from explicit query")
+expectEqual(TortoiseGM.BuildLookupCommand(lookupEntry, ""), nil, "empty explicit query builds nothing")
 
 -- Normalization and composer extraction are the public text-processing seam.
 expectEqual(TortoiseGM.NormalizeCommand("  gm   visible   on\n"), ".gm visible on", "normalizes whitespace and dot prefix")
@@ -89,10 +90,16 @@ expectEqual(TortoiseGM.GetComposerArgs(lookupEntry, ".cast Fireball"), ".cast Fi
 
 -- Positive FIND path sends the lookup only, preserving the action for the UI.
 local sentBeforeLookup = table.getn(sent)
-expectTrue(TortoiseGM.ExecuteLookup(lookupEntry, ".additem Thunderfury"), "matching lookup executes")
+expectTrue(TortoiseGM.ExecuteLookup(lookupEntry, "Thunderfury"), "explicit lookup executes")
 expectEqual(table.getn(sent), sentBeforeLookup + 1, "matching lookup sends one chat command")
 expectEqual(sent[table.getn(sent)].message, ".lookup item Thunderfury", "matching lookup sends expected command")
 expectEqual(sent[table.getn(sent)].channel, "SAY", "lookup uses chat command channel")
+
+-- Help strips user arguments and targets the known catalogue route.
+local sentBeforeHelp = table.getn(sent)
+expectTrue(TortoiseGM.RequestHelp(".server restart 10"), "help request accepts composed command")
+expectEqual(sent[table.getn(sent)].message, ".help server restart", "help strips user arguments")
+expectEqual(table.getn(sent), sentBeforeHelp + 1, "help sends once")
 
 -- Dangerous execution is two-step; explicit lifecycle cancel is immediate.
 local sentBeforeDanger = table.getn(sent)

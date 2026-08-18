@@ -68,7 +68,11 @@ expectEqual(TortoiseGM.CaptureLookupMessage(itemMessage), 1, "captures item hype
 expectEqual(table.getn(TortoiseGM.GetLookupResults()), 1, "stores one item result")
 expectEqual(TortoiseGM.GetLookupResults()[1].id, "19019", "keeps item id")
 expectEqual(TortoiseGM.GetLookupResults()[1].name, "Thunderfury, Blessed Blade of the Windseeker", "keeps clean item name")
-expectEqual(TortoiseGM.GetLookupResultCommand(TortoiseGM.GetLookupResults()[1]), ".additem 19019", "result loads originating action")
+local firstResult = TortoiseGM.GetLookupResults()[1]
+expectEqual(TortoiseGM.GetLookupResultCommand(firstResult), ".additem 19019", "result loads originating action")
+expectEqual(firstResult.sessionId, 1, "first lookup session is monotonically numbered")
+addItemEntry.command = ".deleteitem"
+expectEqual(TortoiseGM.GetLookupResultCommand(firstResult), ".additem 19019", "result owns an immutable action snapshot")
 
 expectEqual(TortoiseGM.CaptureLookupMessage(itemMessage), 0, "deduplicates repeated result")
 expectEqual(table.getn(TortoiseGM.GetLookupResults()), 1, "duplicate does not grow results")
@@ -77,6 +81,7 @@ local foreignSpell = "133 - |cffffffff|Hspell:133|h[Fireball enUS]|h|r"
 expectEqual(TortoiseGM.CaptureLookupMessage(foreignSpell), 0, "ignores foreign link kind during item lookup")
 
 expectTrue(TortoiseGM.BeginLookupCommand(".lookup creature wolf"), "starts manual creature lookup")
+expectEqual(TortoiseGM.pendingLookup.id, 2, "replacement lookup gets a new session number")
 local creatureMessage = "123 - |cffffffff|Hcreature_entry:123|h[Forest Wolf]|h|r"
 expectEqual(TortoiseGM.CaptureLookupMessage(creatureMessage), 1, "captures creature result")
 expectEqual(TortoiseGM.GetLookupResults()[1].kind, "creature", "maps creature hyperlink kind")
@@ -91,9 +96,16 @@ expectEqual(TortoiseGM.GetLookupResultCommand(TortoiseGM.GetLookupResults()[1]),
 expectTrue(TortoiseGM.BeginLookupCommand(".lookup player name arth"), "recognizes nested player lookup")
 expectEqual(TortoiseGM.GetLookupKind(".lookup player name arth"), "player", "uses longest nested lookup command")
 
+expectTrue(TortoiseGM.BeginLookupCommand(".lookup item absent"), "starts lookup for no-results check")
+expectEqual(TortoiseGM.CaptureLookupMessage("No results found."), 0, "no-results summary is not parsed as a result")
+expectEqual(TortoiseGM.lastLookupSession.state, "noresults", "explicit no-results feedback ends the session")
 expectTrue(TortoiseGM.BeginLookupCommand(".lookup item expired"), "starts lookup for expiry check")
+expectEqual(TortoiseGM.CaptureLookupMessage("12 results found"), 0, "generic parser rejects summary lines")
+TortoiseGM.DismissLookupResults()
+expectTrue(TortoiseGM.lookupResultsDismissed, "explicit dismissal is tracked")
 now = 113
 expectFalse(TortoiseGM.IsLookupPending(), "lookup expires after capture window")
+expectEqual(TortoiseGM.lastLookupSession.state, "timedout", "timeout lifecycle records timed out state")
 expectEqual(TortoiseGM.CaptureLookupMessage(itemMessage), 0, "expired lookup captures nothing")
 
 if failures > 0 then
