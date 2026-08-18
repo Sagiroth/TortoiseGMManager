@@ -49,6 +49,19 @@ end
 local function getResultIcon(result)
     return getActualItemIcon(result) or KIND_ICONS[result and result.kind] or "Interface\\Icons\\INV_Misc_Book_09"
 end
+local ITEM_RARITIES = {
+    ["ff9d9d9d"]={ "POOR", 0.62, 0.62, 0.62 },
+    ["ffffffff"]={ "COMMON", 1.00, 1.00, 1.00 },
+    ["ff1eff00"]={ "UNCOMMON", 0.12, 1.00, 0.00 },
+    ["ff0070dd"]={ "RARE", 0.00, 0.44, 0.87 },
+    ["ffa335ee"]={ "EPIC", 0.64, 0.21, 0.93 },
+    ["ffff8000"]={ "LEGENDARY", 1.00, 0.50, 0.00 },
+}
+local function getItemRarity(result)
+    if not result or result.kind ~= "item" or not result.link then return nil end
+    local _,_,code=string.find(string.lower(result.link),"|c(%x%x%x%x%x%x%x%x)")
+    return code and ITEM_RARITIES[code] or nil
+end
 
 local frame=CreateFrame("Frame","TortoiseGMManagerLookupResultsFrame",UIParent)
 frame:SetWidth(RESULT_WIDTH); frame:SetHeight(RESULT_HEIGHT); frame:SetFrameStrata("DIALOG"); frame:SetMovable(true)
@@ -197,7 +210,12 @@ function TortoiseGMManager.RefreshLookupResults(focusFirst)
     if session then local value=session.lookupCommand or "lookup"; if session.query and session.query~="" then value=value.."  '"..session.query.."'" end; if session.sourceEntry and session.sourceEntry.label then value=value.."  ->  "..session.sourceEntry.label end; context:SetText(value) else context:SetText("Lookup results") end
     local start=((TortoiseGMManager.lookupResultsPage-1)*RESULTS_PER_PAGE)+1
     for rowIndex=1,RESULTS_PER_PAGE do local row=TortoiseGMManager.lookupResultRows[rowIndex]; local result=results[start+rowIndex-1]
-        if result then row.result=result; row.icon:SetTexture(getResultIcon(result)); row.name:SetText(result.name or tostring(result.id)); row.meta:SetText(string.upper(result.kind or "result").."  #"..tostring(result.id)); if result==TortoiseGMManager.selectedLookupResult then row:LockHighlight() else row:UnlockHighlight() end; row:Show()
+        if result then
+            row.result=result; row.icon:SetTexture(getResultIcon(result)); row.name:SetText(result.name or tostring(result.id))
+            local rarity=getItemRarity(result)
+            if rarity then row.name:SetTextColor(rarity[2],rarity[3],rarity[4]); row.meta:SetText(rarity[1].." ITEM  #"..tostring(result.id))
+            else color(row.name,COLORS.text); row.meta:SetText(string.upper(result.kind or "result").."  #"..tostring(result.id)) end
+            if result==TortoiseGMManager.selectedLookupResult then row:LockHighlight() else row:UnlockHighlight() end; row:Show()
         else row.result=nil; row:UnlockHighlight(); row:Hide() end
     end
     pageText:SetText(tostring(TortoiseGMManager.lookupResultsPage).." / "..tostring(pages)); countText:SetText(count==0 and "No results" or tostring(count)..(count==1 and " result" or " results"))
