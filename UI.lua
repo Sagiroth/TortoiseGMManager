@@ -513,7 +513,7 @@ function TortoiseGMManager.RefreshTarget()
 end
 
 function TortoiseGMManager.RefreshList()
-    if not TortoiseGMManager.currentCategory then TortoiseGMManager.currentCategory = TortoiseGMManagerDB.lastCategory or "quick" end
+    if not TortoiseGMManager.currentCategory then TortoiseGMManager.currentCategory = TortoiseGMManagerDB.lastCategory or "favourites" end
     if not TortoiseGMManager.page then TortoiseGMManager.page = 1 end
     local query = TortoiseGMManager.searchText or ""
     local results = TortoiseGMManager.GetFilteredCommands(TortoiseGMManager.currentCategory, query)
@@ -560,7 +560,7 @@ end
 
 function TortoiseGMManager.ShowUI()
     TortoiseGMManager.InitializeDB()
-    TortoiseGMManager.currentCategory = TortoiseGMManager.currentCategory or TortoiseGMManagerDB.lastCategory or "quick"
+    TortoiseGMManager.currentCategory = TortoiseGMManager.currentCategory or TortoiseGMManagerDB.lastCategory or "favourites"
     TortoiseGMManager.RefreshCategoryButtons(); TortoiseGMManager.RefreshList(); main:Show()
 end
 
@@ -636,7 +636,7 @@ local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("VARIABLES_LOADED"); eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD"); eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
 eventFrame:SetScript("OnEvent", function()
     if event == "VARIABLES_LOADED" then
-        TortoiseGMManager.InitializeDB(); TortoiseGMManager.currentCategory = TortoiseGMManagerDB.lastCategory or "quick"
+        TortoiseGMManager.InitializeDB(); TortoiseGMManager.currentCategory = TortoiseGMManagerDB.lastCategory or "favourites"
         TortoiseGMManager.RefreshCategoryButtons(); TortoiseGMManager.RefreshList(); TortoiseGMManager.Print("Loaded. Click the minimap gear or use /tgmm.")
     elseif event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_TARGET_CHANGED" then TortoiseGMManager.RefreshTarget() end
 end)

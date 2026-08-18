@@ -1,16 +1,15 @@
 TortoiseGMManager = TortoiseGMManager or {}
-TortoiseGMManager.version = "0.5.2"
+TortoiseGMManager.version = "0.5.3"
 
 TortoiseGMManager.categories = {
-    { id = "quick", label = "Quick" },
+    { id = "favourites", label = "Fav" },
     { id = "all", label = "All" },
     { id = "travel", label = "Travel" },
     { id = "player", label = "Player" },
     { id = "world", label = "World" },
     { id = "lookup", label = "Lookup" },
     { id = "admin", label = "Admin" },
-    { id = "danger", label = "Danger" },
-    { id = "favourites", label = "Faves" },
+{ id = "danger", label = "Danger" },
 }
 
 -- Command names and access levels are curated against Shyalya/tortoise-wow

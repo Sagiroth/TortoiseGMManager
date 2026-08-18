@@ -29,10 +29,8 @@ function TortoiseGMManager.InitializeDB()
     if not TortoiseGMManagerDB.favourites then
         TortoiseGMManagerDB.favourites = {}
     end
-    if TortoiseGMManagerDB.lastCategory == "history" then
+    if TortoiseGMManagerDB.lastCategory == "history" or TortoiseGMManagerDB.lastCategory == "quick" or TortoiseGMManagerDB.lastCategory == nil then
         TortoiseGMManagerDB.lastCategory = "favourites"
-    elseif TortoiseGMManagerDB.lastCategory == nil then
-        TortoiseGMManagerDB.lastCategory = "quick"
     end
     if TortoiseGMManagerDB.minimapX == nil then
         TortoiseGMManagerDB.minimapX = 52

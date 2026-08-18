@@ -15,7 +15,7 @@ The addon is **client-side only**. It does not connect directly to MariaDB and d
 - Compact `590 x 435` command palette instead of a large admin dashboard.
 - Draggable minimap launcher; **Shift-drag** moves it and the position is saved.
 - `/tgmm` opens the manager.
-- Quick, All, Travel, Player, World, Lookup, Admin, Danger and Favourites categories.
+- Fav, All, Travel, Player, World, Lookup, Admin and Danger categories.
 - **Filter actions** searches the catalogue with label-first ranking; it never changes the executable command.
 - Stock Vanilla WoW icons and textures inside the addon; no Ace or LibDBIcon dependency.
 - Exact GM command is visible before execution.
