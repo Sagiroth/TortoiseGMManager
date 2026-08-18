@@ -44,12 +44,19 @@ function TortoiseGMManager.MigrateFavourites()
     TortoiseGMManagerDB.favouritesVersion = 2
 end
 
+function TortoiseGMManager.GetDefaultCategory()
+    TortoiseGMManager.InitializeDB()
+    return table.getn(TortoiseGMManagerDB.favourites or {}) > 0 and "favourites" or "all"
+end
+
 function TortoiseGMManager.InitializeDB()
     if not TortoiseGMManagerDB then TortoiseGMManagerDB = {} end
     if not TortoiseGMManagerDB.history then TortoiseGMManagerDB.history = {} end
     if not TortoiseGMManagerDB.favourites then TortoiseGMManagerDB.favourites = {} end
     TortoiseGMManager.MigrateFavourites()
-    if TortoiseGMManagerDB.lastCategory == "history" or TortoiseGMManagerDB.lastCategory == "quick" or not TortoiseGMManagerDB.lastCategory then TortoiseGMManagerDB.lastCategory = "favourites" end
+    if TortoiseGMManagerDB.lastCategory == "history" or TortoiseGMManagerDB.lastCategory == "quick" or not TortoiseGMManagerDB.lastCategory then
+        TortoiseGMManagerDB.lastCategory = table.getn(TortoiseGMManagerDB.favourites) > 0 and "favourites" or "all"
+    end
     if TortoiseGMManagerDB.minimapX == nil then TortoiseGMManagerDB.minimapX = 52 end
     if TortoiseGMManagerDB.minimapY == nil then TortoiseGMManagerDB.minimapY = 52 end
     if TortoiseGMManagerDB.framePoint == nil then
@@ -157,11 +164,25 @@ function TortoiseGMManager.GetLookupActionLabel(entry)
     return string.upper(trim(entry.label))
 end
 
+function TortoiseGMManager.GetDefaultLookupEntry(kind)
+    local defaults = {
+        item = "additem",
+        itemset = "additemset",
+        spell = "cast",
+        quest = "quest-status",
+        creature = "go-creature",
+        gameobject = "go-object",
+        skill = "setskill",
+    }
+    return defaults[kind] and TortoiseGMManager.FindEntry(defaults[kind]) or nil
+end
+
 function TortoiseGMManager.GetLookupActionDescriptor(result, currentValues)
-    if not result or not result.sourceEntry or not result.sourceEntry.command then
+    if not result then return { kind = "information", result = result, arguments = {}, values = {} } end
+    local entry = result.sourceEntry or TortoiseGMManager.GetDefaultLookupEntry(result.kind)
+    if not entry or not entry.command then
         return { kind = "information", result = result, arguments = {}, values = {} }
     end
-    local entry = result.sourceEntry
     local values = TortoiseGMManager.InitializeValues(entry, currentValues)
     local arguments = TortoiseGMManager.GetEntryArguments(entry)
     local modifiers, lookupFound, i = {}, false, nil

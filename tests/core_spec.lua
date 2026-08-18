@@ -211,6 +211,11 @@ local hpValues = TortoiseGM.InitializeValues(hpEntry)
 hpValues.current = 5000; hpValues.maximum = 7500
 expectEqual(TortoiseGM.ComposeValues(hpEntry, hpValues), ".modify hp 5000 7500", "HP controls compose current and maximum")
 
+TortoiseGMDB.favourites = {}
+expectEqual(TortoiseGM.GetDefaultCategory(), "all", "All is default when no favourites exist")
+TortoiseGMDB.favourites = { TortoiseGM.commands[1].id }
+expectEqual(TortoiseGM.GetDefaultCategory(), "favourites", "Fav is default when favourites exist")
+
 if failures > 0 then
     error(tostring(failures) .. " of " .. tostring(checks) .. " checks failed")
 end

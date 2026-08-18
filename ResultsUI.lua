@@ -45,7 +45,7 @@ for rowIndex=1,RESULTS_PER_PAGE do
     row.icon=row:CreateTexture(nil,"ARTWORK"); row.icon:SetWidth(20); row.icon:SetHeight(20); row.icon:SetPoint("LEFT",row,"LEFT",6,0); row.icon:SetTexCoord(0.08,0.92,0.08,0.92)
     row.name=row:CreateFontString(nil,"OVERLAY","GameFontNormal"); row.name:SetPoint("LEFT",row.icon,"RIGHT",7,4); row.name:SetWidth(284); row.name:SetHeight(13); row.name:SetJustifyH("LEFT"); color(row.name,COLORS.text)
     row.meta=row:CreateFontString(nil,"OVERLAY","GameFontNormalSmall"); row.meta:SetPoint("TOPLEFT",row.name,"BOTTOMLEFT",0,-1); row.meta:SetWidth(284); row.meta:SetHeight(11); row.meta:SetJustifyH("LEFT"); color(row.meta,COLORS.muted)
-    row.use=row:CreateFontString(nil,"OVERLAY","GameFontNormalSmall"); row.use:SetPoint("RIGHT",row,"RIGHT",-9,0); row.use:SetText("SELECT"); color(row.use,COLORS.gold)
+    row.use=row:CreateFontString(nil,"OVERLAY","GameFontNormalSmall"); row.use:SetPoint("RIGHT",row,"RIGHT",-9,0); row.use:SetText(">"); color(row.use,COLORS.gold)
     row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
     row:SetScript("OnClick",function()
         if not this.result then return end
@@ -131,7 +131,7 @@ local function renderAction(focusFirst)
         else control.label:Hide(); control.minus:Hide(); control.edit:Hide(); control.plus:Hide() end
     end
     if not result then
-        selectedText:SetText("Select a result to see details and available actions."); preview:SetText(""); validation:SetText(""); actionButton:SetText("SELECT ONE"); actionButton:Disable(); return
+        selectedText:SetText("Select a result to see details and available actions."); preview:SetText(""); validation:SetText(""); actionButton:SetText("CHOOSE RESULT"); actionButton:Disable(); return
     end
     selectedText:SetText((result.name or tostring(result.id)).."  (#"..tostring(result.id)..")")
     if currentDescriptor.kind=="information" then

@@ -96,15 +96,22 @@ expectEqual(TortoiseGM.pendingLookup.id, 2, "replacement lookup gets a new sessi
 local creatureMessage = "123 - |cffffffff|Hcreature_entry:123|h[Forest Wolf]|h|r"
 expectEqual(TortoiseGM.CaptureLookupMessage(creatureMessage), 1, "captures creature result")
 expectEqual(TortoiseGM.GetLookupResults()[1].kind, "creature", "maps creature hyperlink kind")
-expectEqual(TortoiseGM.GetLookupResultCommand(TortoiseGM.GetLookupResults()[1]), nil, "standalone result invents no action")
-local infoAction = TortoiseGM.GetLookupActionDescriptor(TortoiseGM.GetLookupResults()[1])
-expectEqual(infoAction.kind, "information", "standalone result is informational")
+expectEqual(TortoiseGM.GetLookupResultCommand(TortoiseGM.GetLookupResults()[1]), ".go creature 123", "standalone creature lookup uses safe default action")
+local creatureAction = TortoiseGM.GetLookupActionDescriptor(TortoiseGM.GetLookupResults()[1])
+expectEqual(creatureAction.kind, "action", "standalone creature result is actionable")
 
 expectTrue(TortoiseGM.BeginLookupCommand(".lookup event faire"), "starts manual event lookup")
 local eventMessage = "4 - |cffffffff|Hgameevent:4|h[Darkmoon Faire]|h|r [active]"
 expectEqual(TortoiseGM.CaptureLookupMessage(eventMessage), 1, "captures game event result")
 expectEqual(TortoiseGM.GetLookupResults()[1].kind, "event", "maps gameevent hyperlink kind")
 expectEqual(TortoiseGM.GetLookupResultCommand(TortoiseGM.GetLookupResults()[1]), nil, "manual event result remains informational")
+
+expectTrue(TortoiseGM.BeginLookupCommand(".lookup item wingblade"), "starts standalone item lookup")
+expectEqual(TortoiseGM.CaptureLookupMessage("6504 - |cffffffff|Hitem:6504:0:0:0:0:0:0:0|h[Wingblade]|h|r"), 1, "captures standalone item")
+local standaloneItemAction = TortoiseGM.GetLookupActionDescriptor(TortoiseGM.GetLookupResults()[1], { count = "20" })
+expectEqual(standaloneItemAction.kind, "action", "standalone item result offers add action")
+expectEqual(standaloneItemAction.label, "ADD ITEM", "standalone item action is clearly labelled")
+expectEqual(standaloneItemAction.command, ".additem 6504 20", "standalone item action preserves editable quantity")
 
 local dangerousEntry = {
     label = "Delete item", command = ".deleteitem", lookupCommand = ".lookup item", danger = true,

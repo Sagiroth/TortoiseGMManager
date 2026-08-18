@@ -485,13 +485,24 @@ end
 
 function TortoiseGMManager.RefreshArgumentControls()
     local entry = TortoiseGMManager.selectedEntry
+    local arguments = TortoiseGMManager.GetEntryArguments(entry)
+    local argumentCount = table.getn(arguments)
     local i
     for i = 1, 4 do
         local control = TortoiseGMManager.argumentControls[i]
-        local arguments = TortoiseGMManager.GetEntryArguments(entry)
-local argument = arguments[i]
+        local argument = arguments[i]
         if argument then
             control.argument = argument
+            control:ClearAllPoints(); control.label:ClearAllPoints(); control.edit:ClearAllPoints()
+            if argumentCount == 1 and argument.type == "text" then
+                control:SetWidth(530); control:SetHeight(28); control:SetPoint("TOPLEFT", composer, "TOPLEFT", 10, -51)
+                control.label:SetPoint("LEFT", control, "LEFT", 2, 0); control.label:SetWidth(145)
+                control.edit:SetPoint("LEFT", control, "LEFT", 153, 0); control.edit:SetWidth(360)
+            else
+                control:SetWidth(132); control:SetHeight(48); control:SetPoint("TOPLEFT", composer, "TOPLEFT", 10 + ((i - 1) * 136), -48)
+                control.label:SetPoint("TOPLEFT", control, "TOPLEFT", 2, 0); control.label:SetWidth(128)
+                control.edit:SetPoint("BOTTOM", control, "BOTTOM", 0, 1)
+            end
             control.label:SetText(argument.label .. (argument.required and " *" or ""))
             control.edit.argument = argument; control.minus.argument = argument; control.plus.argument = argument; control.toggle.argument = argument
             control.edit:SetText(tostring(TortoiseGMManager.structuredValues[argument.key] or ""))
@@ -644,7 +655,7 @@ function TortoiseGMManager.RefreshTarget()
 end
 
 function TortoiseGMManager.RefreshList()
-    if not TortoiseGMManager.currentCategory then TortoiseGMManager.currentCategory = TortoiseGMManagerDB.lastCategory or "favourites" end
+    if not TortoiseGMManager.currentCategory then TortoiseGMManager.currentCategory = TortoiseGMManager.GetDefaultCategory() end
     if not TortoiseGMManager.page then TortoiseGMManager.page = 1 end
     local query = TortoiseGMManager.searchText or ""
     local results = TortoiseGMManager.GetFilteredCommands(TortoiseGMManager.currentCategory, query)
@@ -667,6 +678,7 @@ function TortoiseGMManager.RefreshList()
         local entry = results[startIndex + rowIndex - 1]
         if entry then
             row.entry = entry; row.useButton.entry = entry; row.toggleOffButton.entry = entry; row.favoriteButton.entry = entry; row.helpButton.entry = entry
+            if entry.hint and entry.hint ~= "" then row.helpButton:Show() else row.helpButton:Hide() end
             if entry.danger then row.title:SetText("! " .. (entry.label or entry.command)); setFontColor(row.title, COLORS.orange)
             else row.title:SetText(entry.label or entry.command); setFontColor(row.title, COLORS.text) end
             row.icon:SetTexture(getCommandIcon(entry))
@@ -693,7 +705,7 @@ function TortoiseGMManager.RefreshList()
             row.favoriteButton:SetText(TortoiseGMManager.IsFavourite(entry.command) and "-" or "+")
             row:Show()
         else
-            row.entry = nil; row.useButton.entry = nil; row.toggleOffButton.entry = nil; row.toggleOffButton:Hide(); row.favoriteButton.entry = nil; row.helpButton.entry = nil; row:Hide()
+            row.entry = nil; row.useButton.entry = nil; row.toggleOffButton.entry = nil; row.toggleOffButton:Hide(); row.favoriteButton.entry = nil; row.helpButton.entry = nil; row.helpButton:Hide(); row:Hide()
         end
     end
 
@@ -705,7 +717,7 @@ end
 
 function TortoiseGMManager.ShowUI()
     TortoiseGMManager.InitializeDB()
-    TortoiseGMManager.currentCategory = TortoiseGMManager.currentCategory or TortoiseGMManagerDB.lastCategory or "favourites"
+    TortoiseGMManager.currentCategory = TortoiseGMManager.currentCategory or TortoiseGMManager.GetDefaultCategory()
     TortoiseGMManager.RefreshCategoryButtons(); TortoiseGMManager.RefreshList(); main:Show()
 end
 
@@ -792,7 +804,9 @@ local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("VARIABLES_LOADED"); eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD"); eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
 eventFrame:SetScript("OnEvent", function()
     if event == "VARIABLES_LOADED" then
-        TortoiseGMManager.InitializeDB(); TortoiseGMManager.currentCategory = TortoiseGMManagerDB.lastCategory or "favourites"
+        TortoiseGMManager.InitializeDB()
+        TortoiseGMManager.currentCategory = TortoiseGMManager.GetDefaultCategory()
+        TortoiseGMManagerDB.lastCategory = TortoiseGMManager.currentCategory
         restoreSavedPositions()
         TortoiseGMManager.RefreshCategoryButtons(); TortoiseGMManager.RefreshList(); TortoiseGMManager.Print("Loaded. Click the minimap gear or use /tgmm.")
     elseif event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_TARGET_CHANGED" then TortoiseGMManager.RefreshTarget() end

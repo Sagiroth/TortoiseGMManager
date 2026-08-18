@@ -15,7 +15,7 @@ The addon is **client-side only**. It does not connect directly to MariaDB and d
 - Compact structured command palette sized for common 1024x768 Vanilla layouts.
 - Draggable minimap launcher; **Shift-drag** moves it and the position is saved.
 - `/tgmm` opens the manager.
-- Fav, All, Travel, Player, World, Lookup, Admin and Danger categories.
+- Fav, All, Travel, Player, World, Lookup, Admin and Danger categories. Fav opens by default when populated; otherwise All opens.
 - **Filter actions** searches the catalogue with label-first ranking; it never changes the executable command.
 - Stock Vanilla WoW icons and textures inside the addon; no Ace or LibDBIcon dependency.
 - The exact GM command is shown in a read-only preview before execution; purpose-specific controls build it safely.
@@ -129,7 +129,7 @@ The icon position and main-window position are saved automatically.
 4. State actions such as GM mode expose direct **ON/OFF** buttons. **CONFIGURE** opens structured controls for commands requiring values; every hinted syntax gets at least one matching input box.
 5. The dedicated lookup field appears only for a lookup-capable action or when entering the Lookup tab. Type a name or ID and press **SEARCH** (Enter also searches).
 6. Numeric IDs compose the originating action immediately; names are resolved through server-side lookup.
-7. Click a lookup result to select it. Edit any remaining modifiers in the in-place action panel and review its exact preview.
+7. Click a lookup result; the lower panel immediately becomes the relevant action. Standalone item lookup defaults to Add Item, with editable quantity and an exact preview.
 8. Press the action-specific button (for example **ADD ITEM**, **CAST**, or **SET SKILL**) or Enter. Dangerous actions require the same identical action twice within five seconds.
 
 For server-specific syntax, hover the action or click `?` to request `.help` directly from the server.
