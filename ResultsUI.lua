@@ -18,6 +18,22 @@ local function backdrop(frame, alpha, border)
     frame:SetBackdropColor(0.022,0.030,0.044,alpha or 0.97); frame:SetBackdropBorderColor(0.48,0.36,0.15,border or 0.92)
 end
 local function copy(values) local result,k,v={},nil,nil; for k,v in pairs(values or {}) do result[k]=v end; return result end
+local function getItemReference(result)
+    if not result or result.kind ~= "item" then return nil end
+    if result.link then
+        local _,_,reference=string.find(result.link,"|H([^|]+)|h")
+        if reference then return reference end
+    end
+    return "item:"..tostring(result.id)..":0:0:0:0:0:0:0"
+end
+local function getResultIcon(result)
+    local reference=getItemReference(result)
+    if reference and GetItemInfo then
+        local name,link,quality,level,minimum,itemType,subType,stack,equip,texture=GetItemInfo(reference)
+        if texture then return texture end
+    end
+    return KIND_ICONS[result and result.kind] or "Interface\\Icons\\INV_Misc_QuestionMark"
+end
 
 local frame=CreateFrame("Frame","TortoiseGMManagerLookupResultsFrame",UIParent)
 frame:SetWidth(RESULT_WIDTH); frame:SetHeight(RESULT_HEIGHT); frame:SetFrameStrata("DIALOG"); frame:SetMovable(true)
@@ -54,7 +70,17 @@ for rowIndex=1,RESULTS_PER_PAGE do
         TortoiseGMManager.ClearPendingConfirmation(); TortoiseGMManager.RefreshLookupResults(true)
     end)
     row:SetScript("OnEnter",function()
-        if this.result then GameTooltip:SetOwner(this,"ANCHOR_LEFT"); GameTooltip:SetText(this.result.name or tostring(this.result.id)); GameTooltip:AddLine("ID: "..tostring(this.result.id).."  Type: "..tostring(this.result.kind),1,1,1); GameTooltip:Show() end
+        if not this.result then return end
+        GameTooltip:SetOwner(this,"ANCHOR_LEFT")
+        local reference=getItemReference(this.result)
+        if reference then
+            GameTooltip:SetHyperlink(reference)
+            GameTooltip:AddLine("Item ID: "..tostring(this.result.id),0.62,0.60,0.56)
+        else
+            GameTooltip:SetText(this.result.name or tostring(this.result.id))
+            GameTooltip:AddLine("ID: "..tostring(this.result.id).."  Type: "..tostring(this.result.kind),1,1,1)
+        end
+        GameTooltip:Show()
     end)
     row:SetScript("OnLeave",function() GameTooltip:Hide() end)
     table.insert(TortoiseGMManager.lookupResultRows,row)
@@ -155,7 +181,7 @@ function TortoiseGMManager.RefreshLookupResults(focusFirst)
     if session then local value=session.lookupCommand or "lookup"; if session.query and session.query~="" then value=value.."  '"..session.query.."'" end; if session.sourceEntry and session.sourceEntry.label then value=value.."  ->  "..session.sourceEntry.label end; context:SetText(value) else context:SetText("Lookup results") end
     local start=((TortoiseGMManager.lookupResultsPage-1)*RESULTS_PER_PAGE)+1
     for rowIndex=1,RESULTS_PER_PAGE do local row=TortoiseGMManager.lookupResultRows[rowIndex]; local result=results[start+rowIndex-1]
-        if result then row.result=result; row.icon:SetTexture(KIND_ICONS[result.kind] or "Interface\\Icons\\INV_Misc_QuestionMark"); row.name:SetText(result.name or tostring(result.id)); row.meta:SetText(string.upper(result.kind or "result").."  #"..tostring(result.id)); if result==TortoiseGMManager.selectedLookupResult then row:LockHighlight() else row:UnlockHighlight() end; row:Show()
+        if result then row.result=result; row.icon:SetTexture(getResultIcon(result)); row.name:SetText(result.name or tostring(result.id)); row.meta:SetText(string.upper(result.kind or "result").."  #"..tostring(result.id)); if result==TortoiseGMManager.selectedLookupResult then row:LockHighlight() else row:UnlockHighlight() end; row:Show()
         else row.result=nil; row:UnlockHighlight(); row:Hide() end
     end
     pageText:SetText(tostring(TortoiseGMManager.lookupResultsPage).." / "..tostring(pages)); countText:SetText(count==0 and "No results" or tostring(count)..(count==1 and " result" or " results"))
