@@ -176,13 +176,13 @@ useResultButton:Disable()
 useResultButton:SetScript("OnClick", function()
     local result = TortoiseGMManager.selectedLookupResult
     if not result then return end
-    local command = TortoiseGMManager.GetLookupResultCommand(result)
+    local command, values = TortoiseGMManager.GetLookupResultCommand(result)
     if not command then
         TortoiseGMManager.SetStatus("This result has no configured action. Its ID is " .. tostring(result.id) .. ".", "info")
         return
     end
     local label = result.name .. "  (#" .. tostring(result.id) .. ")"
-    TortoiseGMManager.LoadCommand(command, result.sourceEntry, label .. " loaded from lookup. Review, then RUN.")
+    TortoiseGMManager.LoadCommand(command, result.sourceEntry, label .. " loaded from lookup. Review, then EXECUTE.", values)
     frame:Hide()
 end)
 

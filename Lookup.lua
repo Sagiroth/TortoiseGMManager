@@ -117,7 +117,10 @@ function TortoiseGMManager.CaptureLookupMessage(text)
 end
 function TortoiseGMManager.GetLookupResultCommand(result)
     if not result then return nil end
-    if result.sourceEntry and result.sourceEntry.command then return TortoiseGMManager.Compose(result.sourceEntry,result.id) end
+    if result.sourceEntry and result.sourceEntry.command then
+        local values, command = TortoiseGMManager.ComposeLookupResult(result.sourceEntry, TortoiseGMManager.structuredValues, result.id)
+        return command, values
+    end
     local base=FALLBACK_COMMANDS[result.kind]; if base then return base.." "..tostring(result.id or "") end
     return nil
 end

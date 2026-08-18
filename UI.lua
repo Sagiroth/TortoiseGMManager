@@ -3,7 +3,7 @@ TortoiseGMManager.InitializeDB()
 
 local ROWS_PER_PAGE = 4
 local PANEL_WIDTH = 590
-local PANEL_HEIGHT = 435
+local PANEL_HEIGHT = 515
 local CONTENT_LEFT = 14
 local CONTENT_WIDTH = 562
 
@@ -256,16 +256,17 @@ for rowIndex = 1, ROWS_PER_PAGE do
     row:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     row.useButton = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
-    row.useButton:SetWidth(55); row.useButton:SetHeight(22)
+    row.useButton:SetWidth(76); row.useButton:SetHeight(22)
     row.useButton:SetPoint("RIGHT", row, "RIGHT", -62, -5)
     row.useButton:SetScript("OnClick", function()
         local entry = this.entry
         if not entry then return end
-        TortoiseGMManager.SetComposer(entry)
-        if entry.direct and not TortoiseGMManager.IsDangerous(entry.command) then
+        local interaction = TortoiseGMManager.GetInteraction(entry)
+        if interaction == "execute" then
             TortoiseGMManager.Execute(entry.command)
-        elseif TortoiseGMManager.IsDangerous(entry.command) then
-            TortoiseGMManager.SetStatus("Dangerous preset loaded. Press RUN twice to confirm.", "warn")
+        else
+            TortoiseGMManager.SetComposer(entry)
+            if interaction == "review" then TortoiseGMManager.SetStatus("Dangerous action loaded. Press EXECUTE twice to confirm.", "warn") end
         end
     end)
     row.useButton:SetScript("OnEnter", function()
@@ -348,7 +349,7 @@ end)
 
 local composer = CreateFrame("Frame", nil, main)
 composer:SetPoint("BOTTOMLEFT", main, "BOTTOMLEFT", CONTENT_LEFT, 12)
-composer:SetWidth(CONTENT_WIDTH); composer:SetHeight(105)
+composer:SetWidth(CONTENT_WIDTH); composer:SetHeight(185)
 applyBackdrop(composer, 0.82, 0.75)
 
 local composerLabel = composer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -369,7 +370,7 @@ end)
 TortoiseGMManager.commandBox = commandBox
 
 local lookupLabel = composer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-lookupLabel:SetPoint("TOPLEFT", composer, "TOPLEFT", 9, -50)
+lookupLabel:SetPoint("TOPLEFT", composer, "TOPLEFT", 9, -126)
 lookupLabel:SetWidth(115); lookupLabel:SetJustifyH("LEFT")
 lookupLabel:SetText("ITEM NAME OR ID")
 setFontColor(lookupLabel, COLORS.muted)
@@ -388,7 +389,7 @@ end
 local lookupButton
 local lookupBox = CreateFrame("EditBox", "TortoiseGMManagerLookupBox", composer, "InputBoxTemplate")
 lookupBox:SetWidth(300); lookupBox:SetHeight(23)
-lookupBox:SetPoint("TOPLEFT", composer, "TOPLEFT", 120, -44)
+lookupBox:SetPoint("TOPLEFT", composer, "TOPLEFT", 120, -120)
 lookupBox:SetAutoFocus(false)
 lookupBox:SetScript("OnEscapePressed", function() this:ClearFocus() end)
 lookupBox:SetScript("OnEnterPressed", function()
@@ -415,6 +416,87 @@ end)
 lookupButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 TortoiseGMManager.lookupButton = lookupButton
 
+-- Four reusable argument controls keep the composer small and avoid creating
+-- frames whenever another action is selected.
+TortoiseGMManager.argumentControls = {}
+local argumentIndex
+for argumentIndex = 1, 4 do
+    local control = CreateFrame("Frame", nil, composer)
+    control:SetWidth(132); control:SetHeight(48)
+    control:SetPoint("TOPLEFT", composer, "TOPLEFT", 10 + ((argumentIndex - 1) * 136), -48)
+    control.label = control:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    control.label:SetPoint("TOPLEFT", control, "TOPLEFT", 2, 0)
+    control.label:SetWidth(128); control.label:SetJustifyH("LEFT")
+    setFontColor(control.label, COLORS.muted)
+    control.edit = CreateFrame("EditBox", nil, control, "InputBoxTemplate")
+    control.edit:SetWidth(76); control.edit:SetHeight(22)
+    control.edit:SetPoint("BOTTOM", control, "BOTTOM", 0, 1)
+    control.edit:SetAutoFocus(false)
+    control.edit:SetScript("OnEscapePressed", function() this:ClearFocus() end)
+    control.minus = CreateFrame("Button", nil, control, "UIPanelButtonTemplate")
+    control.minus:SetWidth(24); control.minus:SetHeight(21); control.minus:SetPoint("RIGHT", control.edit, "LEFT", -2, 0); control.minus:SetText("-")
+    control.plus = CreateFrame("Button", nil, control, "UIPanelButtonTemplate")
+    control.plus:SetWidth(24); control.plus:SetHeight(21); control.plus:SetPoint("LEFT", control.edit, "RIGHT", 2, 0); control.plus:SetText("+")
+    control.toggle = CreateFrame("Button", nil, control, "UIPanelButtonTemplate")
+    control.toggle:SetWidth(126); control.toggle:SetHeight(22); control.toggle:SetPoint("BOTTOM", control, "BOTTOM", 0, 1)
+    table.insert(TortoiseGMManager.argumentControls, control)
+end
+
+function TortoiseGMManager.RefreshStructuredPreview()
+    local entry = TortoiseGMManager.selectedEntry
+    if not entry then return end
+    local valid, message = TortoiseGMManager.ValidateValues(entry, TortoiseGMManager.structuredValues)
+    commandBox:SetText(TortoiseGMManager.ComposeValues(entry, TortoiseGMManager.structuredValues))
+    if not valid then TortoiseGMManager.SetStatus(message, "info") end
+end
+
+function TortoiseGMManager.RefreshArgumentControls()
+    local entry = TortoiseGMManager.selectedEntry
+    local i
+    for i = 1, 4 do
+        local control = TortoiseGMManager.argumentControls[i]
+        local argument = entry and entry.arguments and entry.arguments[i]
+        if argument then
+            control.argument = argument
+            control.label:SetText(argument.label .. (argument.required and " *" or ""))
+            control.edit.argument = argument; control.minus.argument = argument; control.plus.argument = argument; control.toggle.argument = argument
+            control.edit:SetText(tostring(TortoiseGMManager.structuredValues[argument.key] or ""))
+            if argument.type == "toggle" then
+                control.edit:Hide(); control.minus:Hide(); control.plus:Hide(); control.toggle:Show()
+                control.toggle:SetText(argument.label .. ": " .. TortoiseGMManager.GetOptionLabel(argument, TortoiseGMManager.structuredValues[argument.key]))
+            else
+                control.toggle:Hide(); control.edit:Show()
+                if argument.type == "number" then control.edit:SetWidth(76); control.minus:Show(); control.plus:Show()
+                else control.minus:Hide(); control.plus:Hide(); control.edit:SetWidth(126) end
+            end
+            control:Show()
+        else control.argument = nil; control:Hide() end
+    end
+end
+
+for argumentIndex = 1, 4 do
+    local control = TortoiseGMManager.argumentControls[argumentIndex]
+    control.edit:SetScript("OnTextChanged", function()
+        local argument = this.argument
+        if argument and TortoiseGMManager.structuredValues then TortoiseGMManager.structuredValues[argument.key] = this:GetText(); TortoiseGMManager.RefreshStructuredPreview() end
+    end)
+    control.minus:SetScript("OnClick", function()
+        local argument = this.argument
+        TortoiseGMManager.structuredValues[argument.key] = TortoiseGMManager.AdjustNumber(argument, TortoiseGMManager.structuredValues[argument.key], -1)
+        TortoiseGMManager.RefreshArgumentControls(); TortoiseGMManager.RefreshStructuredPreview()
+    end)
+    control.plus:SetScript("OnClick", function()
+        local argument = this.argument
+        TortoiseGMManager.structuredValues[argument.key] = TortoiseGMManager.AdjustNumber(argument, TortoiseGMManager.structuredValues[argument.key], 1)
+        TortoiseGMManager.RefreshArgumentControls(); TortoiseGMManager.RefreshStructuredPreview()
+    end)
+    control.toggle:SetScript("OnClick", function()
+        local argument = this.argument
+        TortoiseGMManager.structuredValues[argument.key] = TortoiseGMManager.CycleToggle(argument, TortoiseGMManager.structuredValues[argument.key], 1)
+        TortoiseGMManager.RefreshArgumentControls(); TortoiseGMManager.RefreshStructuredPreview()
+    end)
+end
+
 function TortoiseGMManager.RefreshLookupState()
 local entry = getLookupEntry()
 local query = trim(lookupBox:GetText())
@@ -424,10 +506,16 @@ if entry and query ~= "" and actionMatches then lookupButton:Enable() else looku
 end
 
 local runButton = CreateFrame("Button", nil, composer, "UIPanelButtonTemplate")
-runButton:SetWidth(55); runButton:SetHeight(24)
+runButton:SetWidth(72); runButton:SetHeight(24)
 runButton:SetPoint("LEFT", commandBox, "RIGHT", 6, 0)
-runButton:SetText("RUN")
-runButton:SetScript("OnClick", function() TortoiseGMManager.Execute(commandBox:GetText()) end)
+runButton:SetText("EXECUTE")
+runButton:SetScript("OnClick", function()
+    if TortoiseGMManager.selectedEntry and table.getn(TortoiseGMManager.selectedEntry.arguments or {}) > 0 then
+        local valid, message = TortoiseGMManager.ValidateValues(TortoiseGMManager.selectedEntry, TortoiseGMManager.structuredValues)
+        if not valid then TortoiseGMManager.SetStatus(message, "error"); return end
+    end
+    TortoiseGMManager.Execute(commandBox:GetText())
+end)
 
 local helpButton = CreateFrame("Button", nil, composer, "UIPanelButtonTemplate")
 helpButton:SetWidth(50); helpButton:SetHeight(24)
@@ -436,7 +524,7 @@ helpButton:SetText("Help")
 helpButton:SetScript("OnClick", function() TortoiseGMManager.RequestHelp(TortoiseGMManager.selectedEntry or commandBox:GetText()) end)
 
 local hintText = composer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-hintText:SetPoint("TOPLEFT", composer, "TOPLEFT", 10, -72)
+hintText:SetPoint("TOPLEFT", composer, "TOPLEFT", 10, -151)
 hintText:SetWidth(532); hintText:SetHeight(11); hintText:SetJustifyH("LEFT")
 hintText:SetText("Choose an action above, or type any .command manually.")
 setFontColor(hintText, COLORS.muted)
@@ -462,10 +550,11 @@ end
 function TortoiseGMManager.SetComposer(entry)
     if not entry then return end
     TortoiseGMManager.selectedEntry = entry
+    TortoiseGMManager.structuredValues = TortoiseGMManager.InitializeValues(entry)
     TortoiseGMManager.ClearPendingConfirmation()
-    local command = entry.command or ""
-    if not entry.direct and entry.hint and entry.hint ~= "" then command = command .. " " end
+    local command = TortoiseGMManager.ComposeValues(entry, TortoiseGMManager.structuredValues)
     commandBox:SetText(command)
+    TortoiseGMManager.RefreshArgumentControls()
     local hint = ""
     if entry.hint and entry.hint ~= "" then hint = "Args: " .. entry.hint end
     lookupBox:SetText("")
@@ -481,11 +570,13 @@ function TortoiseGMManager.SetComposer(entry)
     elseif not entry.direct and entry.hint and entry.hint ~= "" then commandBox:SetFocus() end
 end
 
-function TortoiseGMManager.LoadCommand(command, entry, hint)
+function TortoiseGMManager.LoadCommand(command, entry, hint, values)
     TortoiseGMManager.selectedEntry = entry
+    TortoiseGMManager.structuredValues = TortoiseGMManager.InitializeValues(entry, values or TortoiseGMManager.structuredValues)
     TortoiseGMManager.ClearPendingConfirmation()
     commandBox:SetText(TortoiseGMManager.NormalizeCommand(command))
-    hintText:SetText(hint or "Loaded from lookup results. Review, adjust arguments if needed, then RUN.")
+    TortoiseGMManager.RefreshArgumentControls()
+    hintText:SetText(hint or "Loaded from lookup results. Review, adjust arguments if needed, then EXECUTE.")
     TortoiseGMManager.RefreshLookupState()
     TortoiseGMManager.ShowUI()
     commandBox:SetFocus()
@@ -544,7 +635,10 @@ function TortoiseGMManager.RefreshList()
             else row.accent:SetTexture(0.78, 0.53, 0.14, 0.95) end
             local raw = entry.command or ""; if entry.hint and entry.hint ~= "" then raw = raw .. "  <" .. entry.hint .. ">" end
             row.command:SetText(raw)
-            if TortoiseGMManager.IsDangerous(entry.command) then row.useButton:SetText("Review") elseif entry.direct then row.useButton:SetText("Run") else row.useButton:SetText("Use") end
+            local interaction = TortoiseGMManager.GetInteraction(entry)
+            if interaction == "review" then row.useButton:SetText("REVIEW")
+            elseif interaction == "execute" then row.useButton:SetText("RUN NOW")
+            else row.useButton:SetText("CONFIGURE") end
             row.favoriteButton:SetText(TortoiseGMManager.IsFavourite(entry.command) and "-" or "+")
             row:Show()
         else
@@ -627,8 +721,9 @@ SLASH_TORTOISEGMMANAGER1 = "/tgmm"
 SlashCmdList["TORTOISEGMMANAGER"] = function(msg)
     msg = trim(msg); TortoiseGMManager.ShowUI()
     if msg ~= "" then
-        TortoiseGMManager.selectedEntry = nil; lookupButton:Disable(); commandBox:SetText(TortoiseGMManager.NormalizeCommand(msg))
-        hintText:SetText("Manual command. Press RUN or Enter to send."); commandBox:SetFocus()
+        TortoiseGMManager.selectedEntry = nil; TortoiseGMManager.structuredValues = nil
+        TortoiseGMManager.RefreshArgumentControls(); lookupButton:Disable(); commandBox:SetText(TortoiseGMManager.NormalizeCommand(msg))
+        hintText:SetText("Manual command. Press EXECUTE or Enter to send."); commandBox:SetFocus()
     end
 end
 

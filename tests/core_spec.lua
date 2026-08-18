@@ -127,6 +127,51 @@ expectEqual(table.getn(TortoiseGM.GetFavouriteCommands()), 1, "favourites view r
 expectFalse(TortoiseGM.ToggleFavourite(favouriteEntry), "favourite can be removed")
 expectFalse(TortoiseGM.IsFavourite(favouriteEntry.command), "removed command is not favourite")
 
+-- Structured values are initialized, validated and composed through the core seam.
+local scaleEntry = TortoiseGM.FindEntry("modify-scale")
+local scaleValues = TortoiseGM.InitializeValues(scaleEntry)
+expectEqual(scaleValues.scale, 1, "scale default")
+expectEqual(scaleValues.persist, "off", "scale persistence default")
+expectEqual(TortoiseGM.ComposeValues(scaleEntry, scaleValues), ".modify scale 1 off", "structured scale composition")
+expectEqual(TortoiseGM.AdjustNumber(scaleEntry.arguments[1], 9.95, 1), 10, "numeric increment clamps maximum")
+expectEqual(TortoiseGM.AdjustNumber(scaleEntry.arguments[1], 0.1, -1), 0.1, "numeric decrement clamps minimum")
+
+local hoverEntry = TortoiseGM.FindEntry("hover")
+local hoverValues = TortoiseGM.InitializeValues(hoverEntry)
+expectEqual(TortoiseGM.ComposeValues(hoverEntry, hoverValues), ".hover 1", "hover preserves numeric on token")
+hoverValues.state = TortoiseGM.CycleToggle(hoverEntry.arguments[1], hoverValues.state, 1)
+expectEqual(hoverValues.state, "0", "toggle cycles to exact off token")
+expectEqual(TortoiseGM.GetOptionLabel(hoverEntry.arguments[1], hoverValues.state), "OFF", "toggle display label")
+expectEqual(TortoiseGM.ComposeValues(hoverEntry, hoverValues), ".hover 0", "toggle off composition")
+
+local addItem = TortoiseGM.FindEntry("additem")
+local valid, validationMessage = TortoiseGM.ValidateValues(addItem, TortoiseGM.InitializeValues(addItem))
+expectFalse(valid, "required lookup ID validation")
+expectEqual(validationMessage, "Item ID is required.", "required validation identifies field")
+expectEqual(TortoiseGM.GetInteraction(TortoiseGM.FindEntry("gps")), "execute", "safe argument-free interaction")
+expectEqual(TortoiseGM.GetInteraction(addItem), "configure", "structured interaction")
+expectEqual(TortoiseGM.GetInteraction(TortoiseGM.FindEntry("deleteitem")), "review", "dangerous interaction")
+expectEqual(TortoiseGM.GetInteraction(nil), "load", "manual interaction")
+
+local itemValues = TortoiseGM.InitializeValues(addItem)
+itemValues.count = 7
+local filledValues, filledCommand = TortoiseGM.ComposeLookupResult(addItem, itemValues, 19019)
+expectEqual(filledValues.itemId, "19019", "lookup fills lookup-id")
+expectEqual(filledValues.count, 7, "lookup preserves count")
+expectEqual(filledCommand, ".additem 19019 7", "lookup result composes modifiers")
+
+-- Legacy command favourites migrate once to stable IDs, including merged aliases.
+TortoiseGMManagerDB.favourites = { ".gm on", ".hover 0", ".not-a-command" }
+TortoiseGM.MigrateFavourites()
+expectEqual(TortoiseGMManagerDB.favourites[1], "gm-mode", "legacy GM favourite migrates")
+expectEqual(TortoiseGMManagerDB.favourites[2], "hover", "merged alias favourite migrates")
+expectEqual(table.getn(TortoiseGMManagerDB.favourites), 2, "unresolvable favourite is omitted")
+TortoiseGM.MigrateFavourites()
+expectEqual(table.getn(TortoiseGMManagerDB.favourites), 2, "favourite migration is idempotent")
+expectTrue(table.getn(TortoiseGM.GetFilteredCommands("all", ".gm off")) > 0, "search includes merged legacy command")
+expectTrue(table.getn(TortoiseGM.GetFilteredCommands("all", "OFF")) > 0, "search includes option labels")
+expectTrue(table.getn(TortoiseGM.GetFilteredCommands("all", "item id")) > 0, "search includes argument labels")
+
 if failures > 0 then
     error(tostring(failures) .. " of " .. tostring(checks) .. " checks failed")
 end
