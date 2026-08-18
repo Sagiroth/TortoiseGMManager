@@ -1,5 +1,9 @@
 # TortoiseGMManager
 
+<p align="center">
+  <img src="assets/logo.jpg" alt="TortoiseGMManager logo" width="480">
+</p>
+
 A compact, Vanilla-native GM command manager for **Tortoise WoW 1.18.1 / client build 7272**.
 
 TortoiseGMManager turns the server's dot-prefixed GM commands into a small searchable in-game interface. It is intended for local/private Tortoise WoW server administration and testing: teleporting, player/NPC management, items and spells, quests, gameobjects, lookups, moderation, server commands, and other common GM workflows.
