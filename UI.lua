@@ -3,7 +3,7 @@ TortoiseGMManager.InitializeDB()
 
 local ROWS_PER_PAGE = 4
 local PANEL_WIDTH = 590
-local PANEL_HEIGHT = 515
+local PANEL_HEIGHT = 540
 local CONTENT_LEFT = 14
 local CONTENT_WIDTH = 562
 
