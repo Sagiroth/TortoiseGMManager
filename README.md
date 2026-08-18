@@ -1,7 +1,7 @@
 # TortoiseGMManager
 
 <p align="center">
-  <img src="assets/logo.jpg" alt="TortoiseGMManager logo" width="480">
+  <img src="assets/logo.jpg" alt="TortoiseGMManager logo" width="100%">
 </p>
 
 A compact, Vanilla-native GM command manager for **Tortoise WoW 1.18.1 / client build 7272**.
