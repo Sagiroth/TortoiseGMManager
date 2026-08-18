@@ -471,6 +471,7 @@ for argumentIndex = 1, 4 do
     control.plus:SetWidth(24); control.plus:SetHeight(21); control.plus:SetPoint("LEFT", control.edit, "RIGHT", 2, 0); control.plus:SetText("+")
     control.toggle = CreateFrame("Button", nil, control, "UIPanelButtonTemplate")
     control.toggle:SetWidth(126); control.toggle:SetHeight(22); control.toggle:SetPoint("BOTTOM", control, "BOTTOM", 0, 1)
+    control:Hide()
     table.insert(TortoiseGMManager.argumentControls, control)
 end
 
@@ -515,16 +516,19 @@ for argumentIndex = 1, 4 do
     end)
     control.minus:SetScript("OnClick", function()
         local argument = this.argument
+        if not argument or not TortoiseGMManager.structuredValues then return end
         TortoiseGMManager.structuredValues[argument.key] = TortoiseGMManager.AdjustNumber(argument, TortoiseGMManager.structuredValues[argument.key], -1)
         TortoiseGMManager.RefreshArgumentControls(); TortoiseGMManager.RefreshStructuredPreview()
     end)
     control.plus:SetScript("OnClick", function()
         local argument = this.argument
+        if not argument or not TortoiseGMManager.structuredValues then return end
         TortoiseGMManager.structuredValues[argument.key] = TortoiseGMManager.AdjustNumber(argument, TortoiseGMManager.structuredValues[argument.key], 1)
         TortoiseGMManager.RefreshArgumentControls(); TortoiseGMManager.RefreshStructuredPreview()
     end)
     control.toggle:SetScript("OnClick", function()
         local argument = this.argument
+        if not argument or not TortoiseGMManager.structuredValues then return end
         TortoiseGMManager.structuredValues[argument.key] = TortoiseGMManager.CycleToggle(argument, TortoiseGMManager.structuredValues[argument.key], 1)
         TortoiseGMManager.RefreshArgumentControls(); TortoiseGMManager.RefreshStructuredPreview()
     end)
@@ -715,6 +719,9 @@ main:SetScript("OnHide", function()
     if TortoiseGMManager.pendingLookup and TortoiseGMManager.EndLookup then TortoiseGMManager.EndLookup("dismissed") end
     TortoiseGMManager.ClearPendingConfirmation()
     TortoiseGMManager.selectedEntry = nil
+    TortoiseGMManager.structuredValues = nil
+    TortoiseGMManager.RefreshArgumentControls()
+    TortoiseGMManager.RefreshLookupState()
     commandBox:ClearFocus(); lookupBox:ClearFocus(); searchBox:ClearFocus()
 end)
 
