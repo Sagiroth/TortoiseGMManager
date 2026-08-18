@@ -66,20 +66,31 @@ function TortoiseGMManager.NormalizeCommand(command)
     return command
 end
 
+function TortoiseGMManager.GetEntryArguments(entry)
+    if not entry then return {} end
+    if entry.arguments and table.getn(entry.arguments) > 0 then return entry.arguments end
+    if entry.hint and entry.hint ~= "" then
+        return { { key = "arguments", label = entry.hint, type = "text", required = true, default = "" } }
+    end
+    return {}
+end
+
 function TortoiseGMManager.InitializeValues(entry, current)
     local values = copy(current)
+    local arguments = TortoiseGMManager.GetEntryArguments(entry)
     local i
-    for i = 1, table.getn(entry and entry.arguments or {}) do
-        local argument = entry.arguments[i]
+    for i = 1, table.getn(arguments) do
+        local argument = arguments[i]
         if values[argument.key] == nil and argument.default ~= nil then values[argument.key] = argument.default end
     end
     return values
 end
 
 function TortoiseGMManager.ValidateValues(entry, values)
+    local arguments = TortoiseGMManager.GetEntryArguments(entry)
     local i
-    for i = 1, table.getn(entry and entry.arguments or {}) do
-        local argument = entry.arguments[i]
+    for i = 1, table.getn(arguments) do
+        local argument = arguments[i]
         local value = values and values[argument.key]
         if argument.required and (value == nil or trim(tostring(value)) == "") then return false, argument.label .. " is required." end
         if value ~= nil and trim(tostring(value)) ~= "" and argument.type == "number" then
@@ -95,9 +106,10 @@ end
 function TortoiseGMManager.ComposeValues(entry, values)
     if not entry then return "" end
     values = TortoiseGMManager.InitializeValues(entry, values)
+    local arguments = TortoiseGMManager.GetEntryArguments(entry)
     local parts, i = {}, nil
-    for i = 1, table.getn(entry.arguments or {}) do
-        local value = values[entry.arguments[i].key]
+    for i = 1, table.getn(arguments) do
+        local value = values[arguments[i].key]
         if value ~= nil and trim(tostring(value)) ~= "" then table.insert(parts, tostring(value)) end
     end
     local suffix = table.concat(parts, " ")
@@ -131,16 +143,17 @@ end
 function TortoiseGMManager.GetInteraction(entry)
     if not entry then return "load" end
     if entry.danger or TortoiseGMManager.IsDangerous(entry.command) then return "review" end
-    if table.getn(entry.arguments or {}) > 0 or (entry.hint and entry.hint ~= "") then return "configure" end
+    if table.getn(TortoiseGMManager.GetEntryArguments(entry)) > 0 then return "configure" end
     if entry.direct then return "execute" end
     return "load"
 end
 
 function TortoiseGMManager.ComposeLookupResult(entry, values, id)
     values = TortoiseGMManager.InitializeValues(entry, values)
+    local arguments = TortoiseGMManager.GetEntryArguments(entry)
     local i, filled = nil, false
-    for i = 1, table.getn(entry and entry.arguments or {}) do
-        if entry.arguments[i].type == "lookup-id" then values[entry.arguments[i].key] = tostring(id); filled = true; break end
+    for i = 1, table.getn(arguments) do
+        if arguments[i].type == "lookup-id" then values[arguments[i].key] = tostring(id); filled = true; break end
     end
     if not filled then return values, TortoiseGMManager.Compose(entry, tostring(id)) end
     return values, TortoiseGMManager.ComposeValues(entry, values)

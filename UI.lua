@@ -95,6 +95,21 @@ local function trim(value)
     return value
 end
 
+local function getSingleToggle(entry)
+    local arguments = TortoiseGMManager.GetEntryArguments(entry)
+    if arguments and table.getn(arguments) == 1 and arguments[1].type == "toggle" then return arguments[1] end
+    return nil
+end
+
+local function executeToggle(entry, optionIndex)
+    local definition = getSingleToggle(entry)
+    local option = definition and definition.options and definition.options[optionIndex]
+    if not option then return end
+    local values = TortoiseGMManager.InitializeValues(entry)
+    values[definition.key] = option.value
+    TortoiseGMManager.Execute(TortoiseGMManager.ComposeValues(entry, values))
+end
+
 local function saveMainPosition(frame)
     local point, relativeTo, relativePoint, x, y = frame:GetPoint()
     TortoiseGMManagerDB.framePoint = point or "CENTER"
@@ -199,6 +214,11 @@ for categoryIndex = 1, table.getn(TortoiseGMManager.categories) do
         TortoiseGMManager.ClearPendingConfirmation()
         TortoiseGMManager.RefreshCategoryButtons()
         TortoiseGMManager.RefreshList()
+        if this.categoryId == "lookup" and TortoiseGMManager.currentResults and TortoiseGMManager.currentResults[1] then
+            TortoiseGMManager.SetComposer(TortoiseGMManager.currentResults[1])
+        elseif TortoiseGMManager.RefreshLookupState then
+            TortoiseGMManager.RefreshLookupState()
+        end
     end)
     table.insert(TortoiseGMManager.categoryButtons, button)
 end
@@ -262,7 +282,9 @@ for rowIndex = 1, ROWS_PER_PAGE do
         local entry = this.entry
         if not entry then return end
         local interaction = TortoiseGMManager.GetInteraction(entry)
-        if interaction == "execute" then
+        if getSingleToggle(entry) then
+            executeToggle(entry, 1)
+        elseif interaction == "execute" then
             TortoiseGMManager.Execute(entry.command)
         else
             TortoiseGMManager.SetComposer(entry)
@@ -280,6 +302,20 @@ for rowIndex = 1, ROWS_PER_PAGE do
         end
     end)
     row.useButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    row.toggleOffButton = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+    row.toggleOffButton:SetWidth(36); row.toggleOffButton:SetHeight(22)
+    row.toggleOffButton:SetPoint("RIGHT", row, "RIGHT", -62, -5)
+    row.toggleOffButton:SetText("OFF")
+    row.toggleOffButton:SetScript("OnClick", function() if this.entry then executeToggle(this.entry, 2) end end)
+    row.toggleOffButton:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Turn off now")
+        GameTooltip:AddLine("Sends the OFF form immediately.", 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    row.toggleOffButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    row.toggleOffButton:Hide()
 
     row.favoriteButton = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
     row.favoriteButton:SetWidth(24); row.favoriteButton:SetHeight(22)
@@ -378,11 +414,6 @@ setFontColor(lookupLabel, COLORS.muted)
 local function getLookupEntry()
     local selected = TortoiseGMManager.selectedEntry
     if selected and selected.lookupCommand then return selected end
-    local i
-    for i = 1, table.getn(TortoiseGMManager.commands or {}) do
-        local entry = TortoiseGMManager.commands[i]
-        if entry.command == ".additem" then return entry end
-    end
     return nil
 end
 
@@ -415,6 +446,7 @@ else GameTooltip:SetText("Item lookup unavailable") end
 end)
 lookupButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 TortoiseGMManager.lookupButton = lookupButton
+lookupLabel:Hide(); lookupBox:Hide(); lookupButton:Hide()
 
 -- Four reusable argument controls keep the composer small and avoid creating
 -- frames whenever another action is selected.
@@ -455,7 +487,8 @@ function TortoiseGMManager.RefreshArgumentControls()
     local i
     for i = 1, 4 do
         local control = TortoiseGMManager.argumentControls[i]
-        local argument = entry and entry.arguments and entry.arguments[i]
+        local arguments = TortoiseGMManager.GetEntryArguments(entry)
+local argument = arguments[i]
         if argument then
             control.argument = argument
             control.label:SetText(argument.label .. (argument.required and " *" or ""))
@@ -499,10 +532,14 @@ end
 
 function TortoiseGMManager.RefreshLookupState()
 local entry = getLookupEntry()
+if not entry then
+    lookupLabel:Hide(); lookupBox:Hide(); lookupButton:Hide(); lookupButton:Disable()
+    return
+end
+lookupLabel:Show(); lookupBox:Show(); lookupButton:Show()
 local query = trim(lookupBox:GetText())
-local selected = TortoiseGMManager.selectedEntry
-local actionMatches = not selected or not selected.lookupCommand or TortoiseGMManager.CommandMatchesEntry(selected, commandBox:GetText())
-if entry and query ~= "" and actionMatches then lookupButton:Enable() else lookupButton:Disable() end
+local actionMatches = TortoiseGMManager.CommandMatchesEntry(entry, commandBox:GetText())
+if query ~= "" and actionMatches then lookupButton:Enable() else lookupButton:Disable() end
 end
 
 local runButton = CreateFrame("Button", nil, composer, "UIPanelButtonTemplate")
@@ -510,7 +547,7 @@ runButton:SetWidth(72); runButton:SetHeight(24)
 runButton:SetPoint("LEFT", commandBox, "RIGHT", 6, 0)
 runButton:SetText("EXECUTE")
 runButton:SetScript("OnClick", function()
-    if TortoiseGMManager.selectedEntry and table.getn(TortoiseGMManager.selectedEntry.arguments or {}) > 0 then
+    if TortoiseGMManager.selectedEntry and table.getn(TortoiseGMManager.GetEntryArguments(TortoiseGMManager.selectedEntry)) > 0 then
         local valid, message = TortoiseGMManager.ValidateValues(TortoiseGMManager.selectedEntry, TortoiseGMManager.structuredValues)
         if not valid then TortoiseGMManager.SetStatus(message, "error"); return end
     end
@@ -626,7 +663,7 @@ function TortoiseGMManager.RefreshList()
         local row = TortoiseGMManager.rows[rowIndex]
         local entry = results[startIndex + rowIndex - 1]
         if entry then
-            row.entry = entry; row.useButton.entry = entry; row.favoriteButton.entry = entry; row.helpButton.entry = entry
+            row.entry = entry; row.useButton.entry = entry; row.toggleOffButton.entry = entry; row.favoriteButton.entry = entry; row.helpButton.entry = entry
             if entry.danger then row.title:SetText("! " .. (entry.label or entry.command)); setFontColor(row.title, COLORS.orange)
             else row.title:SetText(entry.label or entry.command); setFontColor(row.title, COLORS.text) end
             row.icon:SetTexture(getCommandIcon(entry))
@@ -636,13 +673,24 @@ function TortoiseGMManager.RefreshList()
             local raw = entry.command or ""; if entry.hint and entry.hint ~= "" then raw = raw .. "  <" .. entry.hint .. ">" end
             row.command:SetText(raw)
             local interaction = TortoiseGMManager.GetInteraction(entry)
-            if interaction == "review" then row.useButton:SetText("REVIEW")
-            elseif interaction == "execute" then row.useButton:SetText("RUN NOW")
-            else row.useButton:SetText("CONFIGURE") end
+            local toggle = getSingleToggle(entry)
+            row.useButton:ClearAllPoints()
+            if toggle and toggle.options and table.getn(toggle.options) >= 2 then
+                row.useButton:SetWidth(36); row.useButton:SetPoint("RIGHT", row, "RIGHT", -102, -5)
+                row.useButton:SetText(toggle.options[1].label or "ON")
+                row.toggleOffButton:SetText(toggle.options[2].label or "OFF")
+                row.toggleOffButton:Show()
+            else
+                row.useButton:SetWidth(76); row.useButton:SetPoint("RIGHT", row, "RIGHT", -62, -5)
+                row.toggleOffButton:Hide()
+                if interaction == "review" then row.useButton:SetText("REVIEW")
+                elseif interaction == "execute" then row.useButton:SetText("RUN NOW")
+                else row.useButton:SetText("CONFIGURE") end
+            end
             row.favoriteButton:SetText(TortoiseGMManager.IsFavourite(entry.command) and "-" or "+")
             row:Show()
         else
-            row.entry = nil; row.useButton.entry = nil; row.favoriteButton.entry = nil; row.helpButton.entry = nil; row:Hide()
+            row.entry = nil; row.useButton.entry = nil; row.toggleOffButton.entry = nil; row.toggleOffButton:Hide(); row.favoriteButton.entry = nil; row.helpButton.entry = nil; row:Hide()
         end
     end
 

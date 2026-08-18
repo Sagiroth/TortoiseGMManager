@@ -172,6 +172,23 @@ expectTrue(table.getn(TortoiseGM.GetFilteredCommands("all", ".gm off")) > 0, "se
 expectTrue(table.getn(TortoiseGM.GetFilteredCommands("all", "OFF")) > 0, "search includes option labels")
 expectTrue(table.getn(TortoiseGM.GetFilteredCommands("all", "item id")) > 0, "search includes argument labels")
 
+-- Every hinted command receives a helpful fallback input when no richer schema exists.
+local teleEntry = TortoiseGM.FindEntry("tele")
+local teleValues = TortoiseGM.InitializeValues(teleEntry)
+teleValues.location = "Thunder Bluff"
+expectEqual(TortoiseGM.ComposeValues(teleEntry, teleValues), ".tele Thunder Bluff", "tele location input composes exact command")
+local summonEntry = TortoiseGM.FindEntry("summon")
+local summonArguments = TortoiseGM.GetEntryArguments(summonEntry)
+expectEqual(table.getn(summonArguments), 1, "hinted command receives one fallback input")
+expectEqual(summonArguments[1].key, "arguments", "fallback input stores raw syntax arguments")
+local summonValues = TortoiseGM.InitializeValues(summonEntry)
+summonValues.arguments = "Testplayer"
+expectEqual(TortoiseGM.ComposeValues(summonEntry, summonValues), ".summon Testplayer", "fallback input updates command preview")
+local hpEntry = TortoiseGM.FindEntry("modify-hp")
+local hpValues = TortoiseGM.InitializeValues(hpEntry)
+hpValues.current = 5000; hpValues.maximum = 7500
+expectEqual(TortoiseGM.ComposeValues(hpEntry, hpValues), ".modify hp 5000 7500", "HP controls compose current and maximum")
+
 if failures > 0 then
     error(tostring(failures) .. " of " .. tostring(checks) .. " checks failed")
 end

@@ -23,7 +23,7 @@ The addon is **client-side only**. It does not connect directly to MariaDB and d
 - Detailed descriptions, access levels and argument help live in hover tooltips instead of filling the panel.
 - `?` asks the server for `.help <command>`.
 - Add or remove frequently used actions with each row's `+`/`-` control; favourites and window/minimap positions persist in `TortoiseGMManagerDB`.
-- Argument-free safe actions are one-click **RUN NOW** actions; configurable actions open typed number, text, toggle, and lookup-ID controls.
+- Argument-free safe actions use one-click **RUN NOW**; simple state commands expose direct **ON/OFF** buttons; configurable actions open typed number, text, and lookup-ID controls.
 - Persistent/destructive operations require the exact same command to be **EXECUTE**d twice within five seconds.
 - Esc closes addon windows through Vanilla `UISpecialFrames`.
 
@@ -124,8 +124,8 @@ The icon position and main-window position are saved automatically.
 1. Select a player, NPC or object when the command is target-oriented.
 2. Pick a category or use **All** and search.
 3. **RUN NOW** executes safe actions that need no arguments in one row click without changing the composer.
-4. **CONFIGURE** opens structured controls; number controls support typed values and +/- stepping, while toggles cycle without executing.
-5. For lookup-capable actions, type a name or ID in the dedicated lookup field and press **SEARCH** (Enter also searches).
+4. State actions such as GM mode expose direct **ON/OFF** buttons. **CONFIGURE** opens structured controls for commands requiring values; every hinted syntax gets at least one matching input box.
+5. The dedicated lookup field appears only for a lookup-capable action or when entering the Lookup tab. Type a name or ID and press **SEARCH** (Enter also searches).
 6. Numeric IDs compose the originating action immediately; names are resolved through server-side lookup.
 7. Click a lookup result to select it, then press **USE ITEM** or **USE RESULT** to load its ID into the originating action.
 8. Review the exact preview and press **EXECUTE**. Lookup selection, configuration, and toggle cycling never execute it.
