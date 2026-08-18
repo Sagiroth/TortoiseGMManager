@@ -192,14 +192,14 @@ clearSearch:SetText("Clear")
 clearSearch:SetScript("OnClick", function() searchBox:SetText(""); searchBox:ClearFocus() end)
 
 TortoiseGMManager.categoryButtons = {}
-local categoryWidth = 62
+local categoryWidth = 70
 local categoryIndex
 for categoryIndex = 1, table.getn(TortoiseGMManager.categories) do
     local category = TortoiseGMManager.categories[categoryIndex]
     local button = CreateFrame("Button", nil, main, "UIPanelButtonTemplate")
     button:SetWidth(categoryWidth); button:SetHeight(22)
     button:SetPoint("TOPLEFT", main, "TOPLEFT", CONTENT_LEFT + ((categoryIndex - 1) * categoryWidth), -73)
-    button:SetText("  " .. category.label)
+    button:SetText("   " .. category.label)
     button.categoryId = category.id; button.categoryLabel = category.label
     button.icon = button:CreateTexture(nil, "ARTWORK")
     button.icon:SetWidth(12); button.icon:SetHeight(12)
@@ -645,7 +645,7 @@ function TortoiseGMManager.RefreshCategoryButtons()
     local i
     for i = 1, table.getn(TortoiseGMManager.categoryButtons) do
         local button = TortoiseGMManager.categoryButtons[i]
-        button:SetText("  " .. button.categoryLabel)
+        button:SetText("   " .. button.categoryLabel)
         if button.categoryId == TortoiseGMManager.currentCategory then
             if button.icon then button.icon:SetAlpha(1.0) end
             button:LockHighlight()
