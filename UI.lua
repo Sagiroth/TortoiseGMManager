@@ -735,6 +735,13 @@ minimapBorder:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
 minimapButton:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 TortoiseGMManager.minimapButton = minimapButton
 
+local function restoreSavedPositions()
+    main:ClearAllPoints()
+    main:SetPoint(TortoiseGMManagerDB.framePoint or "CENTER", UIParent, TortoiseGMManagerDB.frameRelativePoint or "CENTER", TortoiseGMManagerDB.frameX or 0, TortoiseGMManagerDB.frameY or 15)
+    minimapButton:ClearAllPoints()
+    minimapButton:SetPoint("CENTER", Minimap, "CENTER", TortoiseGMManagerDB.minimapX or 52, TortoiseGMManagerDB.minimapY or 52)
+end
+
 local function updateMinimapButtonPosition()
     local cursorX, cursorY = GetCursorPosition(); local scale = UIParent:GetScale()
     if scale and scale > 0 then cursorX = cursorX / scale; cursorY = cursorY / scale end
@@ -780,6 +787,7 @@ eventFrame:RegisterEvent("VARIABLES_LOADED"); eventFrame:RegisterEvent("PLAYER_E
 eventFrame:SetScript("OnEvent", function()
     if event == "VARIABLES_LOADED" then
         TortoiseGMManager.InitializeDB(); TortoiseGMManager.currentCategory = TortoiseGMManagerDB.lastCategory or "favourites"
+        restoreSavedPositions()
         TortoiseGMManager.RefreshCategoryButtons(); TortoiseGMManager.RefreshList(); TortoiseGMManager.Print("Loaded. Click the minimap gear or use /tgmm.")
     elseif event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_TARGET_CHANGED" then TortoiseGMManager.RefreshTarget() end
 end)
