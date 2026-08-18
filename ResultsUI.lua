@@ -31,7 +31,9 @@ local function usableTexture(texture)
 end
 local function getItemTexture(value)
     if not value or not GetItemInfo then return nil end
-    local name,link,quality,level,minimum,itemType,subType,stack,equip,texture=GetItemInfo(value)
+    -- Turtle WoW's 1.12 client returns the texture path in slot 9;
+    -- slot 10 is a numeric field and paints Texture widgets solid red.
+    local name,link,quality,minimum,itemType,subType,stack,equip,texture=GetItemInfo(value)
     if usableTexture(texture) then return texture end
     return nil
 end
