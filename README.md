@@ -163,14 +163,15 @@ src/game/ObjectMgr.cpp
 
 ## Project structure
 
+The addon files live at the repository root:
+
 ```text
-TortoiseGMManager/
-  TortoiseGMManager.toc
-  Data.lua        command catalogue and danger policy
-  Core.lua        execution, history, help and confirmation logic
-  Lookup.lua      lookup lifecycle and CHAT_MSG_SYSTEM parser
-  UI.lua          compact main palette and minimap launcher
-  ResultsUI.lua   separate lookup-results browser
+TortoiseGMManager.toc
+Data.lua        command catalogue and danger policy
+Core.lua        execution, history, help and confirmation logic
+Lookup.lua      lookup lifecycle and CHAT_MSG_SYSTEM parser
+UI.lua          compact main palette and minimap launcher
+ResultsUI.lua   separate lookup-results browser
 
 tests/
   core_spec.lua
@@ -185,11 +186,11 @@ npx --yes --package fengari-node-cli fengari tests/core_spec.lua
 npx --yes --package fengari-node-cli fengari tests/lookup_spec.lua
 python3 tests/verify_server_catalog.py
 
-npx --yes luaparse -q TortoiseGMManager/Data.lua
-npx --yes luaparse -q TortoiseGMManager/Core.lua
-npx --yes luaparse -q TortoiseGMManager/Lookup.lua
-npx --yes luaparse -q TortoiseGMManager/UI.lua
-npx --yes luaparse -q TortoiseGMManager/ResultsUI.lua
+npx --yes luaparse -q Data.lua
+npx --yes luaparse -q Core.lua
+npx --yes luaparse -q Lookup.lua
+npx --yes luaparse -q UI.lua
+npx --yes luaparse -q ResultsUI.lua
 ```
 
 The addon is statically and behavior tested in development, but still needs its first full visual/integration pass inside the actual Tortoise WoW 1.18.1 client.
