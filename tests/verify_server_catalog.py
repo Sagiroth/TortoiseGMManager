@@ -137,6 +137,24 @@ def main() -> int:
 
     data = DATA_PATH.read_text(encoding="utf-8")
     failures: list[str] = []
+    ids: set[str] = set()
+
+    # Every catalogue row is addressable independently of its mutable command
+    # text and explicitly declares its structured/legacy metadata.
+    for line_number, line in enumerate(data.splitlines(), 1):
+        if "command =" not in line or "access =" not in line:
+            continue
+        identifier = re.search(r'\bid\s*=\s*"([^"]+)"', line)
+        if not identifier or "arguments =" not in line or "legacyCommands =" not in line:
+            failures.append(
+                f"Data.lua:{line_number}: preset lacks id/arguments/legacyCommands metadata"
+            )
+        elif identifier.group(1) in ids:
+            failures.append(
+                f"Data.lua:{line_number}: duplicate stable id {identifier.group(1)!r}"
+            )
+        else:
+            ids.add(identifier.group(1))
 
     for line_number, label, command, access in extract_presets(data):
         route = longest_route(command, routes)

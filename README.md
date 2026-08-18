@@ -10,30 +10,51 @@ TortoiseGMManager turns the server's dot-prefixed GM commands into a small searc
 
 The addon is **client-side only**. It does not connect directly to MariaDB and does not bypass server permissions. Commands are sent through the normal GM chat-command path; the world server remains authoritative for access level, syntax, and database state.
 
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="assets/screenshots/favourites.webp" alt="Favourite commands tab" width="440"><br>
+      <sub><b>Favourites</b> — keep frequently used actions together.</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="assets/screenshots/search.webp" alt="Command search results" width="440"><br>
+      <sub><b>Search</b> — filter the command catalogue as you type.</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="assets/screenshots/item-lookup.webp" alt="Item lookup results and tooltip" width="760"><br>
+  <sub><b>Item lookup</b> — search by partial name, inspect item details, and act on the selected result.</sub>
+</p>
+
 ## Features
 
-- Compact `590 x 435` command palette instead of a large admin dashboard.
+- Compact structured command palette sized for common 1024x768 Vanilla layouts.
 - Draggable minimap launcher; **Shift-drag** moves it and the position is saved.
 - `/tgmm` opens the manager.
-- Quick, All, Travel, Player, World, Lookup, Admin, Danger and History categories.
-- Search across labels, commands, argument hints and lookup metadata.
+- Fav, All, Travel, Player, World, Lookup, Admin and Danger categories. Fav opens by default when populated; otherwise All opens.
+- **Filter actions** searches the catalogue with label-first ranking; it never changes the executable command.
 - Stock Vanilla WoW icons and textures inside the addon; no Ace or LibDBIcon dependency.
-- Exact GM command is visible before execution.
+- The exact GM command is shown in a read-only preview before execution; purpose-specific controls build it safely.
 - Current target is shown in the header.
 - Detailed descriptions, access levels and argument help live in hover tooltips instead of filling the panel.
 - `?` asks the server for `.help <command>`.
-- Command history plus window/minimap positions persist in `TortoiseGMManagerDB`.
-- Persistent/destructive operations require the exact same command to be RUN twice within five seconds.
+- Add or remove frequently used actions with each row's `+`/`-` control; favourites and window/minimap positions persist in `TortoiseGMManagerDB`.
+- Argument-free safe actions use one-click **RUN NOW**; simple state commands expose direct **ON/OFF** buttons; configurable actions open typed number, text, and lookup-ID controls.
+- Persistent/destructive operations require the exact same command to be **EXECUTE**d twice within five seconds.
 - Esc closes addon windows through Vanilla `UISpecialFrames`.
 
 ## Database-aware lookup browser
 
-Many GM commands require an ID even when you only know a name. TortoiseGMManager adds **FIND** to those workflows.
+Many GM commands require an ID even when you only know a name. Lookup-capable actions expose a dedicated name-or-ID field and **SEARCH** button, separate from the executable command bar.
 
 Example:
 
 ```text
-Add item -> type: thunderfury -> FIND
+Add item -> type thunderfury in ITEM NAME OR ID -> SEARCH
 ```
 
 The addon sends:
@@ -44,7 +65,9 @@ The addon sends:
 
 The server performs the lookup against its own loaded data. Matching `CHAT_MSG_SYSTEM` results are captured into a separate compact **Lookup Results** window with the result name, type and ID.
 
-Clicking a result is deliberately safe: it **loads** the appropriate command into the command bar but does not execute it.
+Click a result to select it. The results window then shows the originating action, up to three editable modifiers, validation, and the exact read-only command preview. Numeric fields accept arbitrary keyboard input (for example item counts `10` and `20`); `-` and `+` are optional conveniences. Enter runs a valid action.
+
+Normal declared source actions execute directly in the results window. Dangerous actions retain the same two-click confirmation guard, with the action button changing to **CONFIRM ...**. Changing the result or any modifier clears confirmation. Standalone lookups remain informational and never invent an action; **LOAD COMMAND** is reserved for source actions that cannot safely execute in place.
 
 Examples:
 
@@ -58,7 +81,7 @@ event      -> .event info <id>
 itemset    -> .additemset <id>
 ```
 
-When FIND is launched from a specific action such as **Quest add**, **NPC add**, **Delete item**, **Add item set**, **Cast**, or **Set skill**, the selected result is loaded back into that original action instead.
+When SEARCH is launched from a specific action such as **Quest add**, **NPC add**, **Delete item**, **Add item set**, **Cast**, or **Set skill**, the selected result is loaded back into that original action instead.
 
 The parser listens to `CHAT_MSG_SYSTEM`; it does not monkey-patch chat-frame `AddMessage` methods and does not suppress the original server response.
 
@@ -66,7 +89,7 @@ The parser listens to `CHAT_MSG_SYSTEM`; it does not monkey-patch chat-frame `Ad
 
 The catalogue is checked against the command registry in the Shyalya `playerbots-integration-gh` branch built by `TortoiseWoWServer` by default.
 
-Current development coverage is **126 presets** with **21 FIND mappings**, including:
+Current development coverage is **150 presets** with **21 SEARCH mappings**, including common teleport and race-morph shortcuts plus the deployed core's NPC movement-type actions.
 
 - GM mode, visibility, god mode, GPS, revive, replenish, repair, bank, mailbox and combat utilities.
 - Saved teleports, player teleport/summon, coordinate movement, hover, waterwalk and taxi utilities.
@@ -122,11 +145,12 @@ The icon position and main-window position are saved automatically.
 
 1. Select a player, NPC or object when the command is target-oriented.
 2. Pick a category or use **All** and search.
-3. **Run** executes commands that need no extra arguments.
-4. **Use** loads a parameterized command into the command bar.
-5. **FIND** resolves human-readable names through server-side lookup when available.
-6. Click a lookup result to load its ID into the originating action.
-7. Review the exact command and press **RUN**.
+3. **RUN NOW** executes safe actions that need no arguments in one row click without changing the composer.
+4. State actions such as GM mode expose direct **ON/OFF** buttons. **CONFIGURE** opens structured controls for commands requiring values; every hinted syntax gets at least one matching input box.
+5. The dedicated lookup field appears only for a lookup-capable action or when entering the Lookup tab. Type a name or ID and press Enter to search immediately; **SEARCH** remains available for mouse use.
+6. Numeric IDs compose the originating action immediately; names are resolved through server-side lookup.
+7. Click a lookup result; the lower panel immediately becomes the relevant action. Standalone item lookup defaults to Add Item, with editable quantity and an exact preview.
+8. Press the action-specific button (for example **ADD ITEM**, **CAST**, or **SET SKILL**) or Enter. Dangerous actions require the same identical action twice within five seconds.
 
 For server-specific syntax, hover the action or click `?` to request `.help` directly from the server.
 
@@ -136,8 +160,8 @@ Persistent/destructive operations are not one-click actions. Examples include se
 
 For a dangerous command:
 
-1. the first RUN arms the exact command;
-2. the same command must be RUN again within five seconds;
+1. the first EXECUTE arms the exact command;
+2. the same command must be EXECUTEd again within five seconds;
 3. editing the command clears the pending confirmation.
 
 Explicit cancellation commands such as `.server restart cancel` remain immediate.
@@ -148,6 +172,7 @@ The addon is currently aligned against:
 
 - `tortoise-wow-stack/TortoiseWoWServer`
 - `Shyalya/tortoise-wow` on `playerbots-integration-gh`
+- Live deployment audited at source commit `a6510bc4d8ecc48eac2a1d9a3a8b0610924d12fc`
 - the `Penqle/tortoise-wow` lineage
 - `tortoise-wow-stack/TortoiseWoWKnowledgeBase`
 
@@ -159,7 +184,7 @@ src/game/Commands/Commands.cpp
 src/game/ObjectMgr.cpp
 ```
 
-`tests/verify_server_catalog.py` reconstructs the nested server command table and verifies addon presets, FIND routes, and displayed access levels against the configured source.
+`tests/verify_server_catalog.py` reconstructs the nested server command table and verifies addon presets, SEARCH routes, and displayed access levels against the configured source.
 
 ## Project structure
 
