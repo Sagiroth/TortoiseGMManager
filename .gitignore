@@ -1,0 +1,12 @@
+.DS_Store
+Thumbs.db
+*.zip
+*.log
+__pycache__/
+*.pyc
+
+# Pre-rename development copy; do not publish.
+/TortoiseGM/
+
+# Placeholder artwork superseded by the final supplied logo.
+/assets/tortoise-gm-manager-logo.svg
