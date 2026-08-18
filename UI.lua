@@ -20,12 +20,12 @@ local COLORS = {
 local CATEGORY_ICONS = {
     quick = "Interface\\Icons\\INV_Misc_Gear_01",
     all = "Interface\\Icons\\INV_Misc_Book_09",
-    travel = "Interface\\Icons\\Spell_Arcane_TeleportStormWind",
-    player = "Interface\\Icons\\Spell_Holy_SealOfMight",
-    world = "Interface\\Icons\\Spell_Nature_Earthquake",
+travel = "Interface\\Icons\\INV_Misc_Note_01",
+player = "Interface\\Icons\\INV_Misc_Book_09",
+world = "Interface\\Icons\\INV_Misc_Gear_01",
     lookup = "Interface\\Icons\\INV_Misc_Book_09",
     admin = "Interface\\Icons\\INV_Misc_Gear_01",
-    danger = "Interface\\Icons\\Spell_Shadow_DeathCoil",
+    danger = "Interface\\Icons\\INV_Misc_Note_01",
     favourites = "Interface\\Icons\\INV_Misc_Note_01",
 }
 

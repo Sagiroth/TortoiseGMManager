@@ -4,7 +4,7 @@ local RESULTS_PER_PAGE = 6
 local RESULT_WIDTH, RESULT_HEIGHT = 438, 520
 local COLORS = { gold={0.95,0.72,0.28}, text={0.92,0.90,0.84}, muted={0.62,0.60,0.56}, red={1,0.35,0.3} }
 local KIND_ICONS = {
-    item="Interface\\Icons\\INV_Misc_Bag_10", spell="Interface\\Icons\\Spell_Arcane_Arcane01",
+    item="Interface\\Icons\\INV_Misc_QuestionMark", spell="Interface\\Icons\\Spell_Arcane_Arcane01",
     quest="Interface\\Icons\\INV_Misc_Note_01", creature="Interface\\Icons\\Ability_Hunter_BeastCall",
     gameobject="Interface\\Icons\\INV_Misc_Gear_01", skill="Interface\\Icons\\INV_Misc_Book_09",
     faction="Interface\\Icons\\Spell_Holy_SealOfMight", itemset="Interface\\Icons\\INV_Chest_Chain_05",
@@ -26,10 +26,18 @@ local function getItemReference(result)
     end
     return "item:"..tostring(result.id)..":0:0:0:0:0:0:0"
 end
+local function getItemTexture(value)
+    if not value or not GetItemInfo then return nil end
+    local name,link,quality,level,minimum,itemType,subType,stack,equip,texture=GetItemInfo(value)
+    return texture
+end
 local function getResultIcon(result)
-    local reference=getItemReference(result)
-    if reference and GetItemInfo then
-        local name,link,quality,level,minimum,itemType,subType,stack,equip,texture=GetItemInfo(reference)
+    if result and result.kind == "item" then
+        local texture
+        if GetItemIcon then texture=GetItemIcon(tonumber(result.id) or result.id) end
+        if not texture then texture=getItemTexture(result.link) end
+        if not texture then texture=getItemTexture(getItemReference(result)) end
+        if not texture then texture=getItemTexture(tonumber(result.id) or result.id) end
         if texture then return texture end
     end
     return KIND_ICONS[result and result.kind] or "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -75,6 +83,7 @@ for rowIndex=1,RESULTS_PER_PAGE do
         local reference=getItemReference(this.result)
         if reference then
             GameTooltip:SetHyperlink(reference)
+            this.icon:SetTexture(getResultIcon(this.result))
             GameTooltip:AddLine("Item ID: "..tostring(this.result.id),0.62,0.60,0.56)
         else
             GameTooltip:SetText(this.result.name or tostring(this.result.id))
