@@ -159,6 +159,28 @@ local filledValues, filledCommand = TortoiseGM.ComposeLookupResult(addItem, item
 expectEqual(filledValues.itemId, "19019", "lookup fills lookup-id")
 expectEqual(filledValues.count, 7, "lookup preserves count")
 expectEqual(filledCommand, ".additem 19019 7", "lookup result composes modifiers")
+itemValues.itemId = "19019"
+itemValues.count = "10"
+expectTrue(TortoiseGM.ValidateValues(addItem, itemValues), "typed count 10 is valid")
+expectEqual(TortoiseGM.ComposeValues(addItem, itemValues), ".additem 19019 10", "typed count 10 composes")
+itemValues.count = "20"
+expectTrue(TortoiseGM.ValidateValues(addItem, itemValues), "typed count 20 is valid")
+itemValues.count = "0"
+valid, validationMessage = TortoiseGM.ValidateValues(addItem, itemValues)
+expectFalse(valid, "zero count is rejected")
+expectEqual(validationMessage, "Count must be between 1 and 1000.", "count lower bound is precise")
+itemValues.count = "1001"
+valid, validationMessage = TortoiseGM.ValidateValues(addItem, itemValues)
+expectFalse(valid, "count above maximum is rejected")
+expectEqual(validationMessage, "Count must be between 1 and 1000.", "count upper bound is precise")
+itemValues.count = "1.5"
+valid, validationMessage = TortoiseGM.ValidateValues(addItem, itemValues)
+expectFalse(valid, "fractional count is rejected")
+expectEqual(validationMessage, "Count must be an integer.", "integer validation is precise")
+local deleteItem = TortoiseGM.FindEntry("deleteitem")
+local deleteValues = TortoiseGM.InitializeValues(deleteItem)
+deleteValues.itemId = "19019"; deleteValues.count = "20"; deleteValues.player = ""
+expectTrue(TortoiseGM.ValidateValues(deleteItem, deleteValues), "optional blank modifier is valid")
 
 -- Legacy command favourites migrate once to stable IDs, including merged aliases.
 TortoiseGMManagerDB.favourites = { ".gm on", ".hover 0", ".not-a-command" }

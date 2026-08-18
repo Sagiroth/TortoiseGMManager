@@ -96,8 +96,12 @@ function TortoiseGMManager.ValidateValues(entry, values)
         if value ~= nil and trim(tostring(value)) ~= "" and argument.type == "number" then
             local number = tonumber(value)
             if not number then return false, argument.label .. " must be a number." end
-            if argument.min and number < argument.min then return false, argument.label .. " is below the minimum." end
-            if argument.max and number > argument.max then return false, argument.label .. " is above the maximum." end
+            if argument.integer and number ~= math.floor(number) then return false, argument.label .. " must be an integer." end
+            if argument.min and argument.max and (number < argument.min or number > argument.max) then
+                return false, argument.label .. " must be between " .. tostring(argument.min) .. " and " .. tostring(argument.max) .. "."
+            end
+            if argument.min and number < argument.min then return false, argument.label .. " must be at least " .. tostring(argument.min) .. "." end
+            if argument.max and number > argument.max then return false, argument.label .. " must be at most " .. tostring(argument.max) .. "." end
         end
     end
     return true, nil
@@ -146,6 +150,41 @@ function TortoiseGMManager.GetInteraction(entry)
     if table.getn(TortoiseGMManager.GetEntryArguments(entry)) > 0 then return "configure" end
     if entry.direct then return "execute" end
     return "load"
+end
+
+function TortoiseGMManager.GetLookupActionLabel(entry)
+    if not entry or not entry.label then return "ACTION" end
+    return string.upper(trim(entry.label))
+end
+
+function TortoiseGMManager.GetLookupActionDescriptor(result, currentValues)
+    if not result or not result.sourceEntry or not result.sourceEntry.command then
+        return { kind = "information", result = result, arguments = {}, values = {} }
+    end
+    local entry = result.sourceEntry
+    local values = TortoiseGMManager.InitializeValues(entry, currentValues)
+    local arguments = TortoiseGMManager.GetEntryArguments(entry)
+    local modifiers, lookupFound, i = {}, false, nil
+    for i = 1, table.getn(arguments) do
+        local argument = arguments[i]
+        if argument.type == "lookup-id" and not lookupFound then
+            values[argument.key] = tostring(result.id)
+            lookupFound = true
+        elseif table.getn(modifiers) < 3 then
+            table.insert(modifiers, argument)
+        end
+    end
+    if not lookupFound then
+        local command = TortoiseGMManager.Compose(entry, tostring(result.id))
+        return { kind = "action", result = result, entry = entry, arguments = {}, values = values,
+            command = command, valid = true, label = TortoiseGMManager.GetLookupActionLabel(entry),
+            dangerous = entry.danger or TortoiseGMManager.IsDangerous(command) }
+    end
+    local valid, message = TortoiseGMManager.ValidateValues(entry, values)
+    local command = TortoiseGMManager.ComposeValues(entry, values)
+    return { kind = "action", result = result, entry = entry, arguments = modifiers, values = values,
+        command = command, valid = valid, message = message, label = TortoiseGMManager.GetLookupActionLabel(entry),
+        dangerous = entry.danger or TortoiseGMManager.IsDangerous(command) }
 end
 
 function TortoiseGMManager.ComposeLookupResult(entry, values, id)

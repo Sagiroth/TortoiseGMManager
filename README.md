@@ -45,7 +45,9 @@ The addon sends:
 
 The server performs the lookup against its own loaded data. Matching `CHAT_MSG_SYSTEM` results are captured into a separate compact **Lookup Results** window with the result name, type and ID.
 
-Click a result to select it, then press **USE ITEM** or **USE RESULT**. This safely loads the appropriate command into the command bar without executing it.
+Click a result to select it. The results window then shows the originating action, up to three editable modifiers, validation, and the exact read-only command preview. Numeric fields accept arbitrary keyboard input (for example item counts `10` and `20`); `-` and `+` are optional conveniences. Enter runs a valid action.
+
+Normal declared source actions execute directly in the results window. Dangerous actions retain the same two-click confirmation guard, with the action button changing to **CONFIRM ...**. Changing the result or any modifier clears confirmation. Standalone lookups remain informational and never invent an action; **LOAD COMMAND** is reserved for source actions that cannot safely execute in place.
 
 Examples:
 
@@ -127,8 +129,8 @@ The icon position and main-window position are saved automatically.
 4. State actions such as GM mode expose direct **ON/OFF** buttons. **CONFIGURE** opens structured controls for commands requiring values; every hinted syntax gets at least one matching input box.
 5. The dedicated lookup field appears only for a lookup-capable action or when entering the Lookup tab. Type a name or ID and press **SEARCH** (Enter also searches).
 6. Numeric IDs compose the originating action immediately; names are resolved through server-side lookup.
-7. Click a lookup result to select it, then press **USE ITEM** or **USE RESULT** to load its ID into the originating action.
-8. Review the exact preview and press **EXECUTE**. Lookup selection, configuration, and toggle cycling never execute it.
+7. Click a lookup result to select it. Edit any remaining modifiers in the in-place action panel and review its exact preview.
+8. Press the action-specific button (for example **ADD ITEM**, **CAST**, or **SET SKILL**) or Enter. Dangerous actions require the same identical action twice within five seconds.
 
 For server-specific syntax, hover the action or click `?` to request `.help` directly from the server.
 

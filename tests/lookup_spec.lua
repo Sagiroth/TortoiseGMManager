@@ -58,6 +58,10 @@ local addItemEntry = {
     label = "Add item",
     command = ".additem",
     lookupCommand = ".lookup item",
+    arguments = {
+        { key = "itemId", label = "Item ID", type = "lookup-id", required = true },
+        { key = "count", label = "Count", type = "number", required = true, default = 1, min = 1, max = 1000, integer = true },
+    },
 }
 
 expectTrue(TortoiseGM.BeginLookup(addItemEntry, "thunder", ".lookup item thunder"), "starts item lookup")
@@ -69,10 +73,17 @@ expectEqual(table.getn(TortoiseGM.GetLookupResults()), 1, "stores one item resul
 expectEqual(TortoiseGM.GetLookupResults()[1].id, "19019", "keeps item id")
 expectEqual(TortoiseGM.GetLookupResults()[1].name, "Thunderfury, Blessed Blade of the Windseeker", "keeps clean item name")
 local firstResult = TortoiseGM.GetLookupResults()[1]
-expectEqual(TortoiseGM.GetLookupResultCommand(firstResult), ".additem 19019", "result loads originating action")
+expectEqual(TortoiseGM.GetLookupResultCommand(firstResult), ".additem 19019 1", "result composes originating action")
+local action = TortoiseGM.GetLookupActionDescriptor(firstResult, { count = "20" })
+expectEqual(action.kind, "action", "declared source produces an in-place action")
+expectEqual(action.label, "ADD ITEM", "action label comes from source label")
+expectEqual(action.command, ".additem 19019 20", "descriptor preserves typed modifier")
+expectFalse(action.dangerous, "add item descriptor is safe")
+expectEqual(table.getn(action.arguments), 1, "lookup ID is omitted from editable modifiers")
+expectEqual(action.arguments[1].key, "count", "remaining modifier is exposed")
 expectEqual(firstResult.sessionId, 1, "first lookup session is monotonically numbered")
 addItemEntry.command = ".deleteitem"
-expectEqual(TortoiseGM.GetLookupResultCommand(firstResult), ".additem 19019", "result owns an immutable action snapshot")
+expectEqual(TortoiseGM.GetLookupResultCommand(firstResult), ".additem 19019 1", "result owns an immutable action snapshot")
 
 expectEqual(TortoiseGM.CaptureLookupMessage(itemMessage), 0, "deduplicates repeated result")
 expectEqual(table.getn(TortoiseGM.GetLookupResults()), 1, "duplicate does not grow results")
@@ -85,13 +96,27 @@ expectEqual(TortoiseGM.pendingLookup.id, 2, "replacement lookup gets a new sessi
 local creatureMessage = "123 - |cffffffff|Hcreature_entry:123|h[Forest Wolf]|h|r"
 expectEqual(TortoiseGM.CaptureLookupMessage(creatureMessage), 1, "captures creature result")
 expectEqual(TortoiseGM.GetLookupResults()[1].kind, "creature", "maps creature hyperlink kind")
-expectEqual(TortoiseGM.GetLookupResultCommand(TortoiseGM.GetLookupResults()[1]), ".go creature id 123", "manual creature result gets safe go command")
+expectEqual(TortoiseGM.GetLookupResultCommand(TortoiseGM.GetLookupResults()[1]), nil, "standalone result invents no action")
+local infoAction = TortoiseGM.GetLookupActionDescriptor(TortoiseGM.GetLookupResults()[1])
+expectEqual(infoAction.kind, "information", "standalone result is informational")
 
 expectTrue(TortoiseGM.BeginLookupCommand(".lookup event faire"), "starts manual event lookup")
 local eventMessage = "4 - |cffffffff|Hgameevent:4|h[Darkmoon Faire]|h|r [active]"
 expectEqual(TortoiseGM.CaptureLookupMessage(eventMessage), 1, "captures game event result")
 expectEqual(TortoiseGM.GetLookupResults()[1].kind, "event", "maps gameevent hyperlink kind")
-expectEqual(TortoiseGM.GetLookupResultCommand(TortoiseGM.GetLookupResults()[1]), ".event info 4", "event result loads info command")
+expectEqual(TortoiseGM.GetLookupResultCommand(TortoiseGM.GetLookupResults()[1]), nil, "manual event result remains informational")
+
+local dangerousEntry = {
+    label = "Delete item", command = ".deleteitem", lookupCommand = ".lookup item", danger = true,
+    arguments = {
+        { key = "itemId", label = "Item ID", type = "lookup-id", required = true },
+        { key = "count", label = "Count", type = "number", required = true, default = 1, min = 1, max = 1000, integer = true },
+    },
+}
+expectTrue(TortoiseGM.BeginLookup(dangerousEntry, "thunder", ".lookup item thunder"), "starts dangerous source lookup")
+expectEqual(TortoiseGM.CaptureLookupMessage(itemMessage), 1, "captures dangerous source result")
+local dangerousAction = TortoiseGM.GetLookupActionDescriptor(TortoiseGM.GetLookupResults()[1])
+expectTrue(dangerousAction.dangerous, "dangerous source remains guarded in descriptor")
 
 expectTrue(TortoiseGM.BeginLookupCommand(".lookup player name arth"), "recognizes nested player lookup")
 expectEqual(TortoiseGM.GetLookupKind(".lookup player name arth"), "player", "uses longest nested lookup command")

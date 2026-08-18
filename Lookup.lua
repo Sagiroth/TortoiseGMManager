@@ -20,11 +20,17 @@ local function stripFormatting(value)
     value=value or ""; value=string.gsub(value,"|c%x%x%x%x%x%x%x%x",""); value=string.gsub(value,"|r","")
     value=string.gsub(value,"|H[^|]+|h%[([^%]]+)%]|h","%1"); value=string.gsub(value,"|h",""); return trim(value)
 end
+local function snapshotValue(value)
+    if type(value) ~= "table" then return value end
+    local copy = {}; local key, child
+    for key, child in pairs(value) do
+        if type(child) ~= "function" then copy[snapshotValue(key)] = snapshotValue(child) end
+    end
+    return copy
+end
 local function snapshotEntry(entry)
     if not entry then return nil end
-    local copy = {}; local key, value
-    for key, value in pairs(entry) do if type(value) ~= "table" and type(value) ~= "function" then copy[key]=value end end
-    return copy
+    return snapshotValue(entry)
 end
 local function getLookupKind(command)
     local normalized=lower(TortoiseGMManager.NormalizeCommand(command)); local bestCommand=nil; local bestKind=nil; local lookupCommand, kind
@@ -115,13 +121,9 @@ function TortoiseGMManager.CaptureLookupMessage(text)
     if captured>0 then pending.state="results"; if not TortoiseGMManager.lookupResultsDismissed and TortoiseGMManager.ShowLookupResults then TortoiseGMManager.ShowLookupResults() end end
     return captured
 end
-function TortoiseGMManager.GetLookupResultCommand(result)
-    if not result then return nil end
-    if result.sourceEntry and result.sourceEntry.command then
-        local values, command = TortoiseGMManager.ComposeLookupResult(result.sourceEntry, TortoiseGMManager.structuredValues, result.id)
-        return command, values
-    end
-    local base=FALLBACK_COMMANDS[result.kind]; if base then return base.." "..tostring(result.id or "") end
+function TortoiseGMManager.GetLookupResultCommand(result, values)
+    local descriptor = TortoiseGMManager.GetLookupActionDescriptor(result, values)
+    if descriptor.kind == "action" or descriptor.kind == "load" then return descriptor.command, descriptor.values end
     return nil
 end
 
