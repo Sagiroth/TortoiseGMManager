@@ -18,7 +18,7 @@ The addon is **client-side only**. It does not connect directly to MariaDB and d
 - Fav, All, Travel, Player, World, Lookup, Admin and Danger categories.
 - **Filter actions** searches the catalogue with label-first ranking; it never changes the executable command.
 - Stock Vanilla WoW icons and textures inside the addon; no Ace or LibDBIcon dependency.
-- Exact GM command is visible before execution.
+- The exact GM command is shown in a read-only preview before execution; purpose-specific controls build it safely.
 - Current target is shown in the header.
 - Detailed descriptions, access levels and argument help live in hover tooltips instead of filling the panel.
 - `?` asks the server for `.help <command>`.

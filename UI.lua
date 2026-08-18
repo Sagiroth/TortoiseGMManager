@@ -390,15 +390,15 @@ applyBackdrop(composer, 0.82, 0.75)
 
 local composerLabel = composer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 composerLabel:SetPoint("TOPLEFT", composer, "TOPLEFT", 9, -7)
-composerLabel:SetText("COMMAND")
+composerLabel:SetText("COMMAND PREVIEW (READ ONLY)")
 setFontColor(composerLabel, COLORS.muted)
 
 local commandBox = CreateFrame("EditBox", "TortoiseGMManagerCommandBox", composer, "InputBoxTemplate")
 commandBox:SetWidth(380); commandBox:SetHeight(23)
 commandBox:SetPoint("TOPLEFT", composer, "TOPLEFT", 12, -22)
 commandBox:SetAutoFocus(false)
+commandBox:EnableKeyboard(false)
 commandBox:SetScript("OnEscapePressed", function() this:ClearFocus() end)
-commandBox:SetScript("OnEnterPressed", function() TortoiseGMManager.Execute(this:GetText()); this:ClearFocus() end)
 commandBox:SetScript("OnTextChanged", function()
     TortoiseGMManager.ClearPendingConfirmation()
     if TortoiseGMManager.RefreshLookupState then TortoiseGMManager.RefreshLookupState() end
@@ -608,7 +608,7 @@ function TortoiseGMManager.SetComposer(entry)
     hintText:SetText(hint)
     TortoiseGMManager.RefreshLookupState()
     if entry.lookupCommand then lookupBox:SetFocus()
-    elseif not entry.direct and entry.hint and entry.hint ~= "" then commandBox:SetFocus() end
+    elseif TortoiseGMManager.argumentControls[1] and TortoiseGMManager.argumentControls[1].edit:IsVisible() then TortoiseGMManager.argumentControls[1].edit:SetFocus() end
 end
 
 function TortoiseGMManager.LoadCommand(command, entry, hint, values)
@@ -620,7 +620,6 @@ function TortoiseGMManager.LoadCommand(command, entry, hint, values)
     hintText:SetText(hint or "Loaded from lookup results. Review, adjust arguments if needed, then EXECUTE.")
     TortoiseGMManager.RefreshLookupState()
     TortoiseGMManager.ShowUI()
-    commandBox:SetFocus()
 end
 
 function TortoiseGMManager.RefreshCategoryButtons()
@@ -785,7 +784,7 @@ SlashCmdList["TORTOISEGMMANAGER"] = function(msg)
     if msg ~= "" then
         TortoiseGMManager.selectedEntry = nil; TortoiseGMManager.structuredValues = nil
         TortoiseGMManager.RefreshArgumentControls(); lookupButton:Disable(); commandBox:SetText(TortoiseGMManager.NormalizeCommand(msg))
-        hintText:SetText("Manual command. Press EXECUTE or Enter to send."); commandBox:SetFocus()
+        hintText:SetText("Command supplied through /tgmm. Review the read-only preview, then press EXECUTE.")
     end
 end
 
