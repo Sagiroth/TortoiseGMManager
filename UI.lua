@@ -525,6 +525,14 @@ for argumentIndex = 1, 4 do
         local argument = this.argument
         if argument and TortoiseGMManager.structuredValues then TortoiseGMManager.structuredValues[argument.key] = this:GetText(); TortoiseGMManager.RefreshStructuredPreview() end
     end)
+    control.edit:SetScript("OnEnterPressed", function()
+        local entry = TortoiseGMManager.selectedEntry
+        if not entry or not this.argument then return end
+        local valid, message = TortoiseGMManager.ValidateValues(entry, TortoiseGMManager.structuredValues)
+        if not valid then TortoiseGMManager.SetStatus(message, "error"); return end
+        TortoiseGMManager.Execute(commandBox:GetText())
+        this:ClearFocus()
+    end)
     control.minus:SetScript("OnClick", function()
         local argument = this.argument
         if not argument or not TortoiseGMManager.structuredValues then return end

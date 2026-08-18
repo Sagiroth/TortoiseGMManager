@@ -127,7 +127,7 @@ The icon position and main-window position are saved automatically.
 2. Pick a category or use **All** and search.
 3. **RUN NOW** executes safe actions that need no arguments in one row click without changing the composer.
 4. State actions such as GM mode expose direct **ON/OFF** buttons. **CONFIGURE** opens structured controls for commands requiring values; every hinted syntax gets at least one matching input box.
-5. The dedicated lookup field appears only for a lookup-capable action or when entering the Lookup tab. Type a name or ID and press **SEARCH** (Enter also searches).
+5. The dedicated lookup field appears only for a lookup-capable action or when entering the Lookup tab. Type a name or ID and press Enter to search immediately; **SEARCH** remains available for mouse use.
 6. Numeric IDs compose the originating action immediately; names are resolved through server-side lookup.
 7. Click a lookup result; the lower panel immediately becomes the relevant action. Standalone item lookup defaults to Add Item, with editable quantity and an exact preview.
 8. Press the action-specific button (for example **ADD ITEM**, **CAST**, or **SET SKILL**) or Enter. Dangerous actions require the same identical action twice within five seconds.
