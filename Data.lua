@@ -1,5 +1,5 @@
 TortoiseGMManager = TortoiseGMManager or {}
-TortoiseGMManager.version = "0.7.5"
+TortoiseGMManager.version = "0.7.6"
 
 TortoiseGMManager.categories = {
     { id = "favourites", label = "Fav" },

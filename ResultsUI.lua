@@ -4,7 +4,7 @@ local RESULTS_PER_PAGE = 6
 local RESULT_WIDTH, RESULT_HEIGHT = 438, 520
 local COLORS = { gold={0.95,0.72,0.28}, text={0.92,0.90,0.84}, muted={0.62,0.60,0.56}, red={1,0.35,0.3} }
 local KIND_ICONS = {
-    item="Interface\\Icons\\INV_Misc_QuestionMark", spell="Interface\\Icons\\Spell_Arcane_Arcane01",
+    item="Interface\\Icons\\INV_Misc_Book_09", spell="Interface\\Icons\\Spell_Arcane_Arcane01",
     quest="Interface\\Icons\\INV_Misc_Note_01", creature="Interface\\Icons\\Ability_Hunter_BeastCall",
     gameobject="Interface\\Icons\\INV_Misc_Gear_01", skill="Interface\\Icons\\INV_Misc_Book_09",
     faction="Interface\\Icons\\Spell_Holy_SealOfMight", itemset="Interface\\Icons\\INV_Chest_Chain_05",
@@ -26,21 +26,28 @@ local function getItemReference(result)
     end
     return "item:"..tostring(result.id)..":0:0:0:0:0:0:0"
 end
+local function usableTexture(texture)
+    return type(texture) == "string" and texture ~= ""
+end
 local function getItemTexture(value)
     if not value or not GetItemInfo then return nil end
     local name,link,quality,level,minimum,itemType,subType,stack,equip,texture=GetItemInfo(value)
+    if usableTexture(texture) then return texture end
+    return nil
+end
+local function getActualItemIcon(result)
+    if not result or result.kind ~= "item" then return nil end
+    local texture
+    if GetItemIcon then texture=GetItemIcon(tonumber(result.id) or result.id) end
+    if usableTexture(texture) then return texture end
+    texture=getItemTexture(result.link)
+    if not texture then texture=getItemTexture(getItemReference(result)) end
+    if not texture then texture=getItemTexture(tonumber(result.id) or result.id) end
+    if not texture then texture=getItemTexture(result.name) end
     return texture
 end
 local function getResultIcon(result)
-    if result and result.kind == "item" then
-        local texture
-        if GetItemIcon then texture=GetItemIcon(tonumber(result.id) or result.id) end
-        if not texture then texture=getItemTexture(result.link) end
-        if not texture then texture=getItemTexture(getItemReference(result)) end
-        if not texture then texture=getItemTexture(tonumber(result.id) or result.id) end
-        if texture then return texture end
-    end
-    return KIND_ICONS[result and result.kind] or "Interface\\Icons\\INV_Misc_QuestionMark"
+    return getActualItemIcon(result) or KIND_ICONS[result and result.kind] or "Interface\\Icons\\INV_Misc_Book_09"
 end
 
 local frame=CreateFrame("Frame","TortoiseGMManagerLookupResultsFrame",UIParent)
@@ -200,6 +207,18 @@ end
 prev:SetScript("OnClick",function() if TortoiseGMManager.lookupResultsPage>1 then TortoiseGMManager.lookupResultsPage=TortoiseGMManager.lookupResultsPage-1; TortoiseGMManager.RefreshLookupResults(false) end end)
 next:SetScript("OnClick",function() local pages=math.ceil(table.getn(TortoiseGMManager.GetLookupResults())/RESULTS_PER_PAGE); if TortoiseGMManager.lookupResultsPage<pages then TortoiseGMManager.lookupResultsPage=TortoiseGMManager.lookupResultsPage+1; TortoiseGMManager.RefreshLookupResults(false) end end)
 frame:SetScript("OnMouseWheel",function() if (arg1 or 0)>0 then prev:GetScript("OnClick")() else next:GetScript("OnClick")() end end)
+local iconRetryElapsed=0
+frame:SetScript("OnUpdate",function()
+    iconRetryElapsed=iconRetryElapsed+(arg1 or 0)
+    if iconRetryElapsed<0.5 then return end
+    iconRetryElapsed=0
+    local i
+    for i=1,table.getn(TortoiseGMManager.lookupResultRows) do
+        local row=TortoiseGMManager.lookupResultRows[i]
+        local texture=getActualItemIcon(row.result)
+        if texture then row.icon:SetTexture(texture) end
+    end
+end)
 function TortoiseGMManager.ShowLookupResults() TortoiseGMManager.RefreshLookupResults(false); frame:Show() end
 function TortoiseGMManager.HideLookupResults(dismiss) if dismiss then TortoiseGMManager.DismissLookupResults() end; frame:Hide() end
 TortoiseGMManager.OnLookupStarted=function() TortoiseGMManager.lookupResultsPage=1; TortoiseGMManager.selectedLookupResult=nil; TortoiseGMManager.lookupActionValues=nil; TortoiseGMManager.ClearPendingConfirmation(); TortoiseGMManager.RefreshLookupResults(false); frame:Show() end
