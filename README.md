@@ -83,31 +83,24 @@ Commands not present in the current Shyalya registry are intentionally not adver
 
 ### Downloading from GitHub
 
+The addon files live at the repository root, so the downloaded folder **is** the addon folder.
+
 1. Open the repository and choose **Code -> Download ZIP**.
 2. Extract the downloaded archive.
-3. Open the extracted repository folder and copy the included addon directory:
-
-```text
-TortoiseGMManager/
-```
-
-into your client:
+3. Drag the extracted folder (e.g. `TortoiseGMManager-main`) straight into your client:
 
 ```text
 <WoW>/Interface/AddOns/
 ```
 
-The final layout must be:
+WoW loads any folder that contains a `.toc` file, so the folder name does not need to match; you can keep `TortoiseGMManager-main` as-is or rename it to `TortoiseGMManager` if you prefer.
 
 ```text
 <WoW>/Interface/AddOns/TortoiseGMManager/TortoiseGMManager.toc
 ```
 
-The addon directory and `.toc` already have the correct name; you do **not** need to rename them.
-
 4. Start or restart the WoW client.
-5. On the character-selection screen, open **AddOns** and enable **TortoiseGMManager**.
-6. If the client marks it as outdated, enable **Load out of date AddOns**. The manifest targets Vanilla interface `11200`.
+5. If the client marks it as outdated, enable **Load out of date AddOns**. The manifest targets Vanilla interface `11200`.
 7. Log into a GM character.
 8. Click the gear icon next to the minimap, or run:
 
