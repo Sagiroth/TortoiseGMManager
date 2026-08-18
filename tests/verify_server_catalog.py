@@ -21,7 +21,7 @@ CHAT_CPP_URL = os.environ.get(
     "https://raw.githubusercontent.com/Shyalya/tortoise-wow/"
     "playerbots-integration-gh/src/game/Chat/Chat.cpp",
 )
-DATA_PATH = pathlib.Path(__file__).resolve().parents[1] / "TortoiseGMManager" / "Data.lua"
+DATA_PATH = pathlib.Path(__file__).resolve().parents[1] / "Data.lua"
 
 SECURITY_LABELS = {
     "SEC_PLAYER": "Player",
