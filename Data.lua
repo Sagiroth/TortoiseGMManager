@@ -1,5 +1,5 @@
 TortoiseGMManager = TortoiseGMManager or {}
-TortoiseGMManager.version = "0.5.1"
+TortoiseGMManager.version = "0.5.2"
 
 TortoiseGMManager.categories = {
     { id = "quick", label = "Quick" },
@@ -43,10 +43,11 @@ TortoiseGMManager.commands = {
 { category = "travel", label = "Tele: Ironforge", command = ".tele Ironforge", detail = "Teleport to Ironforge.", access = "Observer", direct = true },
 { category = "travel", label = "Tele: Darnassus", command = ".tele Darnassus", detail = "Teleport to Darnassus.", access = "Observer", direct = true },
 { category = "travel", label = "Tele: Orgrimmar", command = ".tele Orgrimmar", detail = "Teleport to Orgrimmar.", access = "Observer", direct = true },
-{ category = "travel", label = "Tele: Thunder Bluff", command = ".tele ThunderBluff", detail = "Teleport to Thunder Bluff.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: Thunder Bluff", command = ".tele Thunder Bluff", detail = "Teleport to Thunder Bluff.", access = "Observer", direct = true },
 { category = "travel", label = "Tele: Undercity", command = ".tele Undercity", detail = "Teleport to Undercity.", access = "Observer", direct = true },
-{ category = "travel", label = "Tele: Booty Bay", command = ".tele BootyBay", detail = "Teleport to Booty Bay.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: Booty Bay", command = ".tele Booty Bay", detail = "Teleport to Booty Bay.", access = "Observer", direct = true },
 { category = "travel", label = "Tele: Gadgetzan", command = ".tele Gadgetzan", detail = "Teleport to Gadgetzan.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: Ratchet", command = ".tele Ratchet", detail = "Teleport to Ratchet.", access = "Observer", direct = true },
 { category = "travel", label = "Tele: Everlook", command = ".tele Everlook", detail = "Teleport to Everlook.", access = "Observer", direct = true },
 { category = "travel", label = "Tele: Moonglade", command = ".tele Moonglade", detail = "Teleport to Moonglade.", access = "Observer", direct = true },
 { category = "travel", label = "Tele: GM Island", command = ".tele GM Island", detail = "Teleport to GM Island.", access = "Observer", direct = true },
@@ -110,6 +111,9 @@ TortoiseGMManager.commands = {
     { category = "world", label = "Add NPC", command = ".npc add", hint = "creature entry", detail = "Create a persistent creature spawn at your position. Use FIND to search creature templates by name first.", access = "Developer", danger = true, lookupCommand = ".lookup creature", lookupHint = "a creature name" },
     { category = "world", label = "Summon NPC", command = ".npc summon", hint = "creature entry", detail = "Summon a temporary creature at your position. Use FIND to search creature templates by name first.", access = "Developer", lookupCommand = ".lookup creature", lookupHint = "a creature name" },
     { category = "world", label = "Move NPC", command = ".npc move", hint = "[spawn GUID]", detail = "Move the selected/spawned creature according to server syntax.", access = "Developer", danger = true },
+{ category = "world", label = "NPC movement: idle", command = ".npc spawn set movetype idle NODEL", detail = "Make the selected spawn stay idle without deleting its waypoints.", access = "Developer", danger = true, direct = true },
+{ category = "world", label = "NPC movement: random", command = ".npc spawn set movetype random NODEL", detail = "Give the selected spawn random movement without deleting its waypoints.", access = "Developer", danger = true, direct = true },
+{ category = "world", label = "NPC movement: waypoint", command = ".npc spawn set movetype waypoint NODEL", detail = "Give the selected spawn waypoint movement without deleting its waypoints.", access = "Developer", danger = true, direct = true },
     { category = "world", label = "NPC say", command = ".npc say", hint = "text", detail = "Make the selected creature say text.", access = "Developer" },
     { category = "world", label = "NPC yell", command = ".npc yell", hint = "text", detail = "Make the selected creature yell text.", access = "Developer" },
     { category = "world", label = "NPC emote", command = ".npc playemote", hint = "emoteId", detail = "Play an emote on the selected creature.", access = "Developer" },
@@ -192,8 +196,9 @@ TortoiseGMManager.dangerPrefixes = {
     ".unmute",
     ".npc delete",
     ".npc add",
-    ".npc move",
-    ".quest remove",
+".npc move",
+".npc spawn set movetype",
+".quest remove",
     ".event start",
     ".event stop",
     ".deleteitem",

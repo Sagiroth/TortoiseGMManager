@@ -66,7 +66,7 @@ The parser listens to `CHAT_MSG_SYSTEM`; it does not monkey-patch chat-frame `Ad
 
 The catalogue is checked against the command registry in the Shyalya `playerbots-integration-gh` branch built by `TortoiseWoWServer` by default.
 
-Current development coverage is **146 presets** with **21 SEARCH mappings**, including common teleport and race-morph shortcuts.
+Current development coverage is **150 presets** with **21 SEARCH mappings**, including common teleport and race-morph shortcuts plus the deployed core's NPC movement-type actions.
 
 - GM mode, visibility, god mode, GPS, revive, replenish, repair, bank, mailbox and combat utilities.
 - Saved teleports, player teleport/summon, coordinate movement, hover, waterwalk and taxi utilities.
@@ -149,6 +149,7 @@ The addon is currently aligned against:
 
 - `tortoise-wow-stack/TortoiseWoWServer`
 - `Shyalya/tortoise-wow` on `playerbots-integration-gh`
+- Live deployment audited at source commit `a6510bc4d8ecc48eac2a1d9a3a8b0610924d12fc`
 - the `Penqle/tortoise-wow` lineage
 - `tortoise-wow-stack/TortoiseWoWKnowledgeBase`
 
