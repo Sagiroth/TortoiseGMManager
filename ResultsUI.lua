@@ -94,6 +94,7 @@ divider:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -11, -58)
 divider:SetHeight(1)
 
 TortoiseGMManager.lookupResultRows = {}
+local useResultButton
 local rowIndex
 for rowIndex = 1, RESULTS_PER_PAGE do
     local row = CreateFrame("Button", nil, frame)
@@ -118,23 +119,15 @@ for rowIndex = 1, RESULTS_PER_PAGE do
 
     row.use = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     row.use:SetPoint("RIGHT", row, "RIGHT", -9, 0)
-    row.use:SetText("USE >")
+    row.use:SetText("SELECT")
     setFontColor(row.use, COLORS.gold)
 
     row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
 
     row:SetScript("OnClick", function()
-        local result = this.result
-        if not result then return end
-        local command = TortoiseGMManager.GetLookupResultCommand(result)
-        if not command then
-            TortoiseGMManager.SetStatus("This result has no default action. Its ID is " .. tostring(result.id) .. ".", "info")
-            return
-        end
-        local sourceEntry = result.sourceEntry
-        local label = result.name .. "  (#" .. tostring(result.id) .. ")"
-        TortoiseGMManager.LoadCommand(command, sourceEntry, label .. " loaded from lookup. Review, then RUN.")
-        frame:Hide()
+        if not this.result then return end
+        TortoiseGMManager.selectedLookupResult = this.result
+        TortoiseGMManager.RefreshLookupResults()
     end)
 
     row:SetScript("OnEnter", function()
@@ -144,8 +137,8 @@ for rowIndex = 1, RESULTS_PER_PAGE do
             GameTooltip:AddLine("ID: " .. tostring(this.result.id) .. "  Type: " .. tostring(this.result.kind), 1, 1, 1)
             local command = TortoiseGMManager.GetLookupResultCommand(this.result)
             if command then
-                GameTooltip:AddLine("Click loads: " .. command, 0.95, 0.72, 0.28, true)
-                GameTooltip:AddLine("Nothing is executed until you press RUN.", 0.65, 0.85, 1.0, true)
+                GameTooltip:AddLine("Click to select: " .. command, 0.95, 0.72, 0.28, true)
+                GameTooltip:AddLine("Then use the button below to load it. Nothing runs automatically.", 0.65, 0.85, 1.0, true)
             end
             GameTooltip:Show()
         end
@@ -171,9 +164,27 @@ nextButton:SetPoint("LEFT", pageText, "RIGHT", 8, 0)
 nextButton:SetText("Next >")
 
 local countText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-countText:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -14, 17)
+countText:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -14, 42)
 countText:SetWidth(150); countText:SetJustifyH("RIGHT")
 setFontColor(countText, COLORS.muted)
+
+useResultButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+useResultButton:SetWidth(96); useResultButton:SetHeight(22)
+useResultButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -14, 11)
+useResultButton:SetText("USE ITEM")
+useResultButton:Disable()
+useResultButton:SetScript("OnClick", function()
+    local result = TortoiseGMManager.selectedLookupResult
+    if not result then return end
+    local command = TortoiseGMManager.GetLookupResultCommand(result)
+    if not command then
+        TortoiseGMManager.SetStatus("This result has no configured action. Its ID is " .. tostring(result.id) .. ".", "info")
+        return
+    end
+    local label = result.name .. "  (#" .. tostring(result.id) .. ")"
+    TortoiseGMManager.LoadCommand(command, result.sourceEntry, label .. " loaded from lookup. Review, then RUN.")
+    frame:Hide()
+end)
 
 TortoiseGMManager.lookupResultsPage = 1
 
@@ -203,9 +214,11 @@ function TortoiseGMManager.RefreshLookupResults()
             row.icon:SetTexture(KIND_ICONS[result.kind] or "Interface\\Icons\\INV_Misc_QuestionMark")
             row.name:SetText(result.name or tostring(result.id))
             row.meta:SetText(string.upper(result.kind or "result") .. "  #" .. tostring(result.id))
+            if result == TortoiseGMManager.selectedLookupResult then row:LockHighlight() else row:UnlockHighlight() end
             row:Show()
         else
             row.result = nil
+            row:UnlockHighlight()
             row:Hide()
         end
     end
@@ -217,6 +230,14 @@ function TortoiseGMManager.RefreshLookupResults()
     else countText:SetText("No results") end
     if TortoiseGMManager.lookupResultsPage <= 1 then prevButton:Disable() else prevButton:Enable() end
     if TortoiseGMManager.lookupResultsPage >= pageCount then nextButton:Disable() else nextButton:Enable() end
+    local selected = TortoiseGMManager.selectedLookupResult
+    if selected and TortoiseGMManager.GetLookupResultCommand(selected) then
+        useResultButton:SetText(selected.kind == "item" and "USE ITEM" or "USE RESULT")
+        useResultButton:Enable()
+    else
+        useResultButton:SetText("SELECT ONE")
+        useResultButton:Disable()
+    end
 end
 
 prevButton:SetScript("OnClick", function()
@@ -253,6 +274,7 @@ end)
 
 TortoiseGMManager.OnLookupStarted = function()
     TortoiseGMManager.lookupResultsPage = 1
+    TortoiseGMManager.selectedLookupResult = nil
     TortoiseGMManager.RefreshLookupResults()
     frame:Show()
 end

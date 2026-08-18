@@ -15,14 +15,14 @@ The addon is **client-side only**. It does not connect directly to MariaDB and d
 - Compact `590 x 435` command palette instead of a large admin dashboard.
 - Draggable minimap launcher; **Shift-drag** moves it and the position is saved.
 - `/tgmm` opens the manager.
-- Quick, All, Travel, Player, World, Lookup, Admin, Danger and History categories.
+- Quick, All, Travel, Player, World, Lookup, Admin, Danger and Favourites categories.
 - **Filter actions** searches the catalogue with label-first ranking; it never changes the executable command.
 - Stock Vanilla WoW icons and textures inside the addon; no Ace or LibDBIcon dependency.
 - Exact GM command is visible before execution.
 - Current target is shown in the header.
 - Detailed descriptions, access levels and argument help live in hover tooltips instead of filling the panel.
 - `?` asks the server for `.help <command>`.
-- Command history plus window/minimap positions persist in `TortoiseGMManagerDB`.
+- Add or remove frequently used actions with each row's `+`/`-` control; favourites and window/minimap positions persist in `TortoiseGMManagerDB`.
 - Persistent/destructive operations require the exact same command to be RUN twice within five seconds.
 - Esc closes addon windows through Vanilla `UISpecialFrames`.
 
@@ -44,7 +44,7 @@ The addon sends:
 
 The server performs the lookup against its own loaded data. Matching `CHAT_MSG_SYSTEM` results are captured into a separate compact **Lookup Results** window with the result name, type and ID.
 
-Clicking a result is deliberately safe: it **loads** the appropriate command into the command bar but does not execute it.
+Click a result to select it, then press **USE ITEM** or **USE RESULT**. This safely loads the appropriate command into the command bar without executing it.
 
 Examples:
 
@@ -66,7 +66,7 @@ The parser listens to `CHAT_MSG_SYSTEM`; it does not monkey-patch chat-frame `Ad
 
 The catalogue is checked against the command registry in the Shyalya `playerbots-integration-gh` branch built by `TortoiseWoWServer` by default.
 
-Current development coverage is **126 presets** with **21 SEARCH mappings**, including:
+Current development coverage is **146 presets** with **21 SEARCH mappings**, including common teleport and race-morph shortcuts.
 
 - GM mode, visibility, god mode, GPS, revive, replenish, repair, bank, mailbox and combat utilities.
 - Saved teleports, player teleport/summon, coordinate movement, hover, waterwalk and taxi utilities.
@@ -126,8 +126,8 @@ The icon position and main-window position are saved automatically.
 4. **Use** loads a parameterized command into the executable command bar.
 5. For lookup-capable actions, type a name or ID in the dedicated lookup field and press **SEARCH** (Enter also searches).
 6. Numeric IDs compose the originating action immediately; names are resolved through server-side lookup.
-7. Click a lookup result to load its ID into the originating action. This never executes it.
-8. Review the exact command and press **RUN**.
+7. Click a lookup result to select it, then press **USE ITEM** or **USE RESULT** to load its ID into the originating action.
+8. Review the exact command and press **RUN**. Selection and loading never execute it.
 
 For server-specific syntax, hover the action or click `?` to request `.help` directly from the server.
 

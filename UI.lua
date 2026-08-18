@@ -26,7 +26,7 @@ local CATEGORY_ICONS = {
     lookup = "Interface\\Icons\\INV_Misc_Book_09",
     admin = "Interface\\Icons\\INV_Misc_Gear_01",
     danger = "Interface\\Icons\\Spell_Shadow_DeathCoil",
-    history = "Interface\\Icons\\INV_Misc_Note_01",
+    favourites = "Interface\\Icons\\INV_Misc_Note_01",
 }
 
 local function getCategoryIcon(category)
@@ -127,7 +127,7 @@ titleIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
 local title = main:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("LEFT", titleIcon, "RIGHT", 7, 0)
-title:SetText("TortoiseGMManager")
+title:SetText("TortoiseGMManager  v" .. (TortoiseGMManager.version or "?"))
 setFontColor(title, COLORS.gold)
 
 local headerGlow = main:CreateTexture(nil, "BACKGROUND")
@@ -257,7 +257,7 @@ for rowIndex = 1, ROWS_PER_PAGE do
 
     row.useButton = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
     row.useButton:SetWidth(55); row.useButton:SetHeight(22)
-    row.useButton:SetPoint("RIGHT", row, "RIGHT", -35, -5)
+    row.useButton:SetPoint("RIGHT", row, "RIGHT", -62, -5)
     row.useButton:SetScript("OnClick", function()
         local entry = this.entry
         if not entry then return end
@@ -279,6 +279,23 @@ for rowIndex = 1, ROWS_PER_PAGE do
         end
     end)
     row.useButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    row.favoriteButton = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+    row.favoriteButton:SetWidth(24); row.favoriteButton:SetHeight(22)
+    row.favoriteButton:SetPoint("RIGHT", row, "RIGHT", -34, -5)
+    row.favoriteButton:SetText("+")
+    row.favoriteButton:SetScript("OnClick", function()
+        if not this.entry then return end
+        local added = TortoiseGMManager.ToggleFavourite(this.entry)
+        TortoiseGMManager.SetStatus(added and "Added to favourites." or "Removed from favourites.", "ok")
+        TortoiseGMManager.RefreshList()
+    end)
+    row.favoriteButton:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+        GameTooltip:SetText(TortoiseGMManager.IsFavourite(this.entry and this.entry.command) and "Remove from favourites" or "Add to favourites")
+        GameTooltip:Show()
+    end)
+    row.favoriteButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     row.helpButton = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
     row.helpButton:SetWidth(26); row.helpButton:SetHeight(22)
@@ -354,8 +371,19 @@ TortoiseGMManager.commandBox = commandBox
 local lookupLabel = composer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 lookupLabel:SetPoint("TOPLEFT", composer, "TOPLEFT", 9, -50)
 lookupLabel:SetWidth(115); lookupLabel:SetJustifyH("LEFT")
-lookupLabel:SetText("LOOKUP")
+lookupLabel:SetText("ITEM NAME OR ID")
 setFontColor(lookupLabel, COLORS.muted)
+
+local function getLookupEntry()
+    local selected = TortoiseGMManager.selectedEntry
+    if selected and selected.lookupCommand then return selected end
+    local i
+    for i = 1, table.getn(TortoiseGMManager.commands or {}) do
+        local entry = TortoiseGMManager.commands[i]
+        if entry.command == ".additem" then return entry end
+    end
+    return nil
+end
 
 local lookupButton
 local lookupBox = CreateFrame("EditBox", "TortoiseGMManagerLookupBox", composer, "InputBoxTemplate")
@@ -363,7 +391,10 @@ lookupBox:SetWidth(300); lookupBox:SetHeight(23)
 lookupBox:SetPoint("TOPLEFT", composer, "TOPLEFT", 120, -44)
 lookupBox:SetAutoFocus(false)
 lookupBox:SetScript("OnEscapePressed", function() this:ClearFocus() end)
-lookupBox:SetScript("OnEnterPressed", function() if lookupButton:IsEnabled() then TortoiseGMManager.ExecuteLookup(TortoiseGMManager.selectedEntry, this:GetText()) end end)
+lookupBox:SetScript("OnEnterPressed", function()
+    local entry = getLookupEntry()
+    if entry and trim(this:GetText()) ~= "" then TortoiseGMManager.ExecuteLookup(entry, this:GetText()) end
+end)
 lookupBox:SetScript("OnTextChanged", function() if TortoiseGMManager.RefreshLookupState then TortoiseGMManager.RefreshLookupState() end end)
 TortoiseGMManager.lookupBox = lookupBox
 
@@ -371,22 +402,25 @@ lookupButton = CreateFrame("Button", nil, composer, "UIPanelButtonTemplate")
 lookupButton:SetWidth(68); lookupButton:SetHeight(24)
 lookupButton:SetPoint("LEFT", lookupBox, "RIGHT", 6, 0)
 lookupButton:SetText("SEARCH"); lookupButton:Disable()
-lookupButton:SetScript("OnClick", function() TortoiseGMManager.ExecuteLookup(TortoiseGMManager.selectedEntry, lookupBox:GetText()) end)
+lookupButton:SetScript("OnClick", function() TortoiseGMManager.ExecuteLookup(getLookupEntry(), lookupBox:GetText()) end)
 lookupButton:SetScript("OnEnter", function()
     GameTooltip:SetOwner(this, "ANCHOR_TOP")
-    if TortoiseGMManager.selectedEntry and TortoiseGMManager.selectedEntry.lookupCommand then
-        GameTooltip:SetText("Search by name or ID")
-        GameTooltip:AddLine("Uses " .. TortoiseGMManager.selectedEntry.lookupCommand .. " and keeps the action loaded.", 1, 1, 1, true)
-    else GameTooltip:SetText("No lookup for this command") end
+local entry = getLookupEntry()
+if entry then
+GameTooltip:SetText(entry == TortoiseGMManager.selectedEntry and "Search by name or ID" or "Search items by name or ID")
+GameTooltip:AddLine("Uses " .. entry.lookupCommand .. " and loads the matching action without running it.", 1, 1, 1, true)
+else GameTooltip:SetText("Item lookup unavailable") end
     GameTooltip:Show()
 end)
 lookupButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 TortoiseGMManager.lookupButton = lookupButton
 
 function TortoiseGMManager.RefreshLookupState()
-    local entry = TortoiseGMManager.selectedEntry
-    local query = trim(lookupBox:GetText())
-    if entry and entry.lookupCommand and query ~= "" and TortoiseGMManager.CommandMatchesEntry(entry, commandBox:GetText()) then lookupButton:Enable() else lookupButton:Disable() end
+local entry = getLookupEntry()
+local query = trim(lookupBox:GetText())
+local selected = TortoiseGMManager.selectedEntry
+local actionMatches = not selected or not selected.lookupCommand or TortoiseGMManager.CommandMatchesEntry(selected, commandBox:GetText())
+if entry and query ~= "" and actionMatches then lookupButton:Enable() else lookupButton:Disable() end
 end
 
 local runButton = CreateFrame("Button", nil, composer, "UIPanelButtonTemplate")
@@ -440,7 +474,7 @@ function TortoiseGMManager.SetComposer(entry)
         if entry.lookupCommand == ".lookup item" then lookupPrompt = "ITEM NAME OR ID" end
         lookupLabel:SetText(lookupPrompt)
         hint = hint .. (hint ~= "" and "  |  " or "") .. "Search by name or enter an ID directly"
-    else lookupLabel:SetText("LOOKUP") end
+    else lookupLabel:SetText("ITEM NAME OR ID") end
     hintText:SetText(hint)
     TortoiseGMManager.RefreshLookupState()
     if entry.lookupCommand then lookupBox:SetFocus()
@@ -501,7 +535,7 @@ function TortoiseGMManager.RefreshList()
         local row = TortoiseGMManager.rows[rowIndex]
         local entry = results[startIndex + rowIndex - 1]
         if entry then
-            row.entry = entry; row.useButton.entry = entry; row.helpButton.entry = entry
+            row.entry = entry; row.useButton.entry = entry; row.favoriteButton.entry = entry; row.helpButton.entry = entry
             if entry.danger then row.title:SetText("! " .. (entry.label or entry.command)); setFontColor(row.title, COLORS.orange)
             else row.title:SetText(entry.label or entry.command); setFontColor(row.title, COLORS.text) end
             row.icon:SetTexture(getCommandIcon(entry))
@@ -511,9 +545,10 @@ function TortoiseGMManager.RefreshList()
             local raw = entry.command or ""; if entry.hint and entry.hint ~= "" then raw = raw .. "  <" .. entry.hint .. ">" end
             row.command:SetText(raw)
             if TortoiseGMManager.IsDangerous(entry.command) then row.useButton:SetText("Review") elseif entry.direct then row.useButton:SetText("Run") else row.useButton:SetText("Use") end
+            row.favoriteButton:SetText(TortoiseGMManager.IsFavourite(entry.command) and "-" or "+")
             row:Show()
         else
-            row.entry = nil; row.useButton.entry = nil; row.helpButton.entry = nil; row:Hide()
+            row.entry = nil; row.useButton.entry = nil; row.favoriteButton.entry = nil; row.helpButton.entry = nil; row:Hide()
         end
     end
 

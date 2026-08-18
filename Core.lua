@@ -26,7 +26,12 @@ function TortoiseGMManager.InitializeDB()
     if not TortoiseGMManagerDB.history then
         TortoiseGMManagerDB.history = {}
     end
-    if TortoiseGMManagerDB.lastCategory == nil then
+    if not TortoiseGMManagerDB.favourites then
+        TortoiseGMManagerDB.favourites = {}
+    end
+    if TortoiseGMManagerDB.lastCategory == "history" then
+        TortoiseGMManagerDB.lastCategory = "favourites"
+    elseif TortoiseGMManagerDB.lastCategory == nil then
         TortoiseGMManagerDB.lastCategory = "quick"
     end
     if TortoiseGMManagerDB.minimapX == nil then
@@ -172,43 +177,58 @@ function TortoiseGMManager.RequestHelp(value)
     return true
 end
 
-function TortoiseGMManager.GetHistoryCommands()
+function TortoiseGMManager.IsFavourite(command)
+    TortoiseGMManager.InitializeDB()
+    local normalized = TortoiseGMManager.NormalizeCommand(command)
+    local i
+    for i = 1, table.getn(TortoiseGMManagerDB.favourites) do
+        if TortoiseGMManagerDB.favourites[i] == normalized then return true end
+    end
+    return false
+end
+
+function TortoiseGMManager.ToggleFavourite(entry)
+    if not entry or not entry.command then return false end
+    TortoiseGMManager.InitializeDB()
+    local command = TortoiseGMManager.NormalizeCommand(entry.command)
+    local i
+    for i = table.getn(TortoiseGMManagerDB.favourites), 1, -1 do
+        if TortoiseGMManagerDB.favourites[i] == command then
+            table.remove(TortoiseGMManagerDB.favourites, i)
+            return false
+        end
+    end
+    table.insert(TortoiseGMManagerDB.favourites, command)
+    return true
+end
+
+function TortoiseGMManager.GetFavouriteCommands()
     TortoiseGMManager.InitializeDB()
     local results = {}
     local i
-    for i = 1, table.getn(TortoiseGMManagerDB.history) do
-        table.insert(results, {
-            category = "history",
-            label = (function()
-                local command = TortoiseGMManagerDB.history[i]
-                local best = nil
-                local j
-                for j = 1, table.getn(TortoiseGMManager.commands or {}) do
-                    local entry = TortoiseGMManager.commands[j]
-                    if TortoiseGMManager.CommandMatchesEntry(entry, command) and (not best or string.len(entry.command) > string.len(best.command)) then best = entry end
-                end
-                if best then return best.label .. " (recent)" end
-                return "Recent " .. tostring(i)
-            end)(),
-            command = TortoiseGMManagerDB.history[i],
-            detail = "Previously executed command.",
-            access = "History",
-            direct = false,
-            fromHistory = true,
-        })
+    for i = 1, table.getn(TortoiseGMManagerDB.favourites) do
+        local command = TortoiseGMManagerDB.favourites[i]
+        local j
+        for j = 1, table.getn(TortoiseGMManager.commands or {}) do
+            local entry = TortoiseGMManager.commands[j]
+            if TortoiseGMManager.NormalizeCommand(entry.command) == command then
+                table.insert(results, entry)
+                break
+            end
+        end
     end
     return results
 end
 
 function TortoiseGMManager.GetFilteredCommands(category, query)
-    local source = category == "history" and TortoiseGMManager.GetHistoryCommands() or (TortoiseGMManager.commands or {})
+    local source = category == "favourites" and TortoiseGMManager.GetFavouriteCommands() or (TortoiseGMManager.commands or {})
     local normalizedQuery = lower(trim(query))
     local ranked = { {}, {}, {}, {}, {} }
     local results = {}
     local i
     for i = 1, table.getn(source) do
         local entry = source[i]
-        local inCategory = category == "history" or category == "all" or entry.category == category
+        local inCategory = category == "favourites" or category == "all" or entry.category == category
         if inCategory then
             if normalizedQuery == "" then table.insert(results, entry)
             else

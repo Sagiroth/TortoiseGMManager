@@ -1,4 +1,5 @@
 TortoiseGMManager = TortoiseGMManager or {}
+TortoiseGMManager.version = "0.5.1"
 
 TortoiseGMManager.categories = {
     { id = "quick", label = "Quick" },
@@ -9,7 +10,7 @@ TortoiseGMManager.categories = {
     { id = "lookup", label = "Lookup" },
     { id = "admin", label = "Admin" },
     { id = "danger", label = "Danger" },
-    { id = "history", label = "History" },
+    { id = "favourites", label = "Faves" },
 }
 
 -- Command names and access levels are curated against Shyalya/tortoise-wow
@@ -38,6 +39,17 @@ TortoiseGMManager.commands = {
     { category = "quick", label = "Whispers OFF", command = ".whispers off", detail = "Stop accepting whispers and clear allowed whisperers.", access = "Moderator", direct = true },
 
     { category = "travel", label = "Teleport", command = ".tele", hint = "saved location ID/name/partial name", detail = "Teleport to a saved game_tele destination. The server accepts an ID, exact name, or the first destination containing a partial name.", access = "Observer" },
+{ category = "travel", label = "Tele: Stormwind", command = ".tele Stormwind", detail = "Teleport to Stormwind.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: Ironforge", command = ".tele Ironforge", detail = "Teleport to Ironforge.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: Darnassus", command = ".tele Darnassus", detail = "Teleport to Darnassus.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: Orgrimmar", command = ".tele Orgrimmar", detail = "Teleport to Orgrimmar.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: Thunder Bluff", command = ".tele ThunderBluff", detail = "Teleport to Thunder Bluff.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: Undercity", command = ".tele Undercity", detail = "Teleport to Undercity.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: Booty Bay", command = ".tele BootyBay", detail = "Teleport to Booty Bay.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: Gadgetzan", command = ".tele Gadgetzan", detail = "Teleport to Gadgetzan.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: Everlook", command = ".tele Everlook", detail = "Teleport to Everlook.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: Moonglade", command = ".tele Moonglade", detail = "Teleport to Moonglade.", access = "Observer", direct = true },
+{ category = "travel", label = "Tele: GM Island", command = ".tele GM Island", detail = "Teleport to GM Island.", access = "Observer", direct = true },
     { category = "travel", label = "Appear at player", command = ".goname", hint = "player name", detail = "Teleport yourself to a player.", access = "Observer" },
     { category = "travel", label = "Summon player", command = ".summon", hint = "player name", detail = "Summon a player to you.", access = "Moderator" },
     { category = "travel", label = "Go XYZ", command = ".go xyz", hint = "x y z [mapId]", detail = "Teleport to coordinates; mapId is optional and defaults to your current map.", access = "Observer" },
@@ -78,6 +90,14 @@ TortoiseGMManager.commands = {
     { category = "player", label = "Explore all", command = ".explorecheat 1", detail = "Mark exploration flags using the selected-player command path.", access = "Developer", direct = true },
     { category = "player", label = "Clear exploration", command = ".explorecheat 0", detail = "Clear exploration flags using the selected-player command path.", access = "Developer", direct = true },
     { category = "player", label = "Morph", command = ".modify morph", hint = "displayId", detail = "Set display ID on selected unit, or self when no unit is selected.", access = "Developer" },
+{ category = "player", label = "Morph: Human", command = ".modify morph 49", detail = "Apply the common Human display ID.", access = "Developer", direct = true },
+{ category = "player", label = "Morph: Orc", command = ".modify morph 51", detail = "Apply the common Orc display ID.", access = "Developer", direct = true },
+{ category = "player", label = "Morph: Dwarf", command = ".modify morph 53", detail = "Apply the common Dwarf display ID.", access = "Developer", direct = true },
+{ category = "player", label = "Morph: Night Elf", command = ".modify morph 55", detail = "Apply the common Night Elf display ID.", access = "Developer", direct = true },
+{ category = "player", label = "Morph: Undead", command = ".modify morph 57", detail = "Apply the common Undead display ID.", access = "Developer", direct = true },
+{ category = "player", label = "Morph: Tauren", command = ".modify morph 59", detail = "Apply the common Tauren display ID.", access = "Developer", direct = true },
+{ category = "player", label = "Morph: Troll", command = ".modify morph 1478", detail = "Apply the common Troll display ID.", access = "Developer", direct = true },
+{ category = "player", label = "Morph: Gnome", command = ".modify morph 1563", detail = "Apply the common Gnome display ID.", access = "Developer", direct = true },
     { category = "player", label = "Demorph", command = ".demorph", detail = "Restore the selected unit's normal display.", access = "Moderator", direct = true },
     { category = "player", label = "Learn spell", command = ".learn", hint = "spellId/spellLink", detail = "Teach a spell to the selected player. Use FIND to resolve a spell name.", access = "Developer", lookupCommand = ".lookup spell", lookupHint = "a spell name" },
     { category = "player", label = "Learn class spells", command = ".learn all_myspells", detail = "Teach all class spells supported by the server.", access = "Developer", danger = true, direct = true },
@@ -145,7 +165,8 @@ TortoiseGMManager.commands = {
     { category = "admin", label = "Unban IP", command = ".unban ip", hint = "ip", detail = "Remove an IP ban.", access = "Developer", danger = true },
 
     { category = "danger", label = "Server restart", command = ".server restart", hint = "delaySeconds [exitCode]", detail = "Schedule a server restart. Requires double-run confirmation in this addon.", access = "Administrator", danger = true },
-    { category = "danger", label = "Cancel restart/shutdown", command = ".server restart cancel", detail = "Cancel a pending shutdown/restart timer.", access = "Administrator", direct = true },
+    { category = "danger", label = "Cancel restart", command = ".server restart cancel", detail = "Cancel a pending restart timer.", access = "Administrator", direct = true },
+{ category = "danger", label = "Cancel shutdown", command = ".server shutdown cancel", detail = "Cancel a pending shutdown timer.", access = "Administrator", direct = true },
     { category = "danger", label = "Server shutdown", command = ".server shutdown", hint = "delaySeconds [exitCode]", detail = "Schedule a server shutdown. Requires double-run confirmation in this addon.", access = "Administrator", danger = true },
     { category = "danger", label = "Reset all raids", command = ".server resetallraids", detail = "Reset all raid instances. Requires double-run confirmation.", access = "Administrator", danger = true, direct = true },
     { category = "danger", label = "Kill selected", command = ".die", detail = "Kill the selected unit. Requires double-run confirmation.", access = "Developer", danger = true, direct = true },

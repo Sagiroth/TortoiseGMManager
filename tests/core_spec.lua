@@ -119,6 +119,14 @@ TortoiseGM.AddHistory(".gps")
 expectEqual(TortoiseGMDB.history[1], ".gps", "history moves repeated command to front")
 expectEqual(TortoiseGMDB.history[2], ".server info", "history retains other recent command")
 
+-- Favourites persist known catalogue commands and toggle cleanly.
+local favouriteEntry = TortoiseGM.commands[1]
+expectTrue(TortoiseGM.ToggleFavourite(favouriteEntry), "favourite can be added")
+expectTrue(TortoiseGM.IsFavourite(favouriteEntry.command), "added command is favourite")
+expectEqual(table.getn(TortoiseGM.GetFavouriteCommands()), 1, "favourites view returns added command")
+expectFalse(TortoiseGM.ToggleFavourite(favouriteEntry), "favourite can be removed")
+expectFalse(TortoiseGM.IsFavourite(favouriteEntry.command), "removed command is not favourite")
+
 if failures > 0 then
     error(tostring(failures) .. " of " .. tostring(checks) .. " checks failed")
 end
