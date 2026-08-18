@@ -14,7 +14,7 @@ The addon is **client-side only**. It does not connect directly to MariaDB and d
 
 - Compact `590 x 435` command palette instead of a large admin dashboard.
 - Draggable minimap launcher; **Shift-drag** moves it and the position is saved.
-- `/tgm`, `/tortoisegm`, or `/gmui` opens the manager.
+- `/tgmm` opens the manager.
 - Quick, All, Travel, Player, World, Lookup, Admin, Danger and History categories.
 - Search across labels, commands, argument hints and lookup metadata.
 - Stock Vanilla WoW icons and textures inside the addon; no Ace or LibDBIcon dependency.
@@ -100,12 +100,13 @@ WoW loads any folder that contains a `.toc` file, so the folder name does not ne
 ```
 
 4. Start or restart the WoW client.
-5. If the client marks it as outdated, enable **Load out of date AddOns**. The manifest targets Vanilla interface `11200`.
+5. On the character-selection screen, open **AddOns** and enable **TortoiseGMManager**.
+6. If the client marks it as outdated, enable **Load out of date AddOns**. The manifest targets Vanilla interface `11200`.
 7. Log into a GM character.
 8. Click the gear icon next to the minimap, or run:
 
 ```text
-/tgm
+/tgmm
 ```
 
 ### Minimap controls

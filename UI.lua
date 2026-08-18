@@ -549,9 +549,7 @@ minimapButton:SetScript("OnEnter", function()
 end)
 minimapButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-SLASH_TORTOISEGMMANAGER1 = "/tgm"
-SLASH_TORTOISEGMMANAGER2 = "/tortoisegm"
-SLASH_TORTOISEGMMANAGER3 = "/gmui"
+SLASH_TORTOISEGMMANAGER1 = "/tgmm"
 SlashCmdList["TORTOISEGMMANAGER"] = function(msg)
     msg = trim(msg); TortoiseGMManager.ShowUI()
     if msg ~= "" then
@@ -565,6 +563,6 @@ eventFrame:RegisterEvent("VARIABLES_LOADED"); eventFrame:RegisterEvent("PLAYER_E
 eventFrame:SetScript("OnEvent", function()
     if event == "VARIABLES_LOADED" then
         TortoiseGMManager.InitializeDB(); TortoiseGMManager.currentCategory = TortoiseGMManagerDB.lastCategory or "quick"
-        TortoiseGMManager.RefreshCategoryButtons(); TortoiseGMManager.RefreshList(); TortoiseGMManager.Print("Loaded. Click the minimap gear or use /tgm.")
+        TortoiseGMManager.RefreshCategoryButtons(); TortoiseGMManager.RefreshList(); TortoiseGMManager.Print("Loaded. Click the minimap gear or use /tgmm.")
     elseif event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_TARGET_CHANGED" then TortoiseGMManager.RefreshTarget() end
 end)
