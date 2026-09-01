@@ -37,7 +37,7 @@ The addon is **client-side only**. It does not connect directly to MariaDB and d
 - `/tgmm` opens the manager.
 - Fav, All, Travel, Player, World, Lookup, Admin and Danger categories. Fav opens by default when populated; otherwise All opens.
 - **Filter actions** searches the catalogue with label-first ranking; it never changes the executable command.
-- Stock Vanilla WoW icons and textures inside the addon; no Ace or LibDBIcon dependency.
+- Uses stock interface icons and textures provided by the installed Vanilla WoW client; no game texture files are bundled, and no Ace or LibDBIcon dependency is required.
 - The exact GM command is shown in a read-only preview before execution; purpose-specific controls build it safely.
 - Current target is shown in the header.
 - Detailed descriptions, access levels and argument help live in hover tooltips instead of filling the panel.
@@ -172,7 +172,7 @@ The addon is currently aligned against:
 
 - `tortoise-wow-stack/TortoiseWoWServer`
 - `Shyalya/tortoise-wow` on `playerbots-integration-gh`
-- Live deployment audited at source commit `a6510bc4d8ecc48eac2a1d9a3a8b0610924d12fc`
+- Command catalogue compatibility validated against server source commit `a6510bc4d8ecc48eac2a1d9a3a8b0610924d12fc`
 - the `Penqle/tortoise-wow` lineage
 - `tortoise-wow-stack/TortoiseWoWKnowledgeBase`
 
@@ -219,3 +219,15 @@ npx --yes luaparse -q ResultsUI.lua
 ```
 
 The addon is statically and behavior tested in development, but still needs its first full visual/integration pass inside the actual Tortoise WoW 1.18.1 client.
+
+## Project scope and affiliation
+
+This repository contains client-addon source code, project artwork and
+documentation screenshots. It does not distribute game-client binaries or
+extracted game-data/texture files, provide hosting, or operate a game service.
+It is not affiliated with or endorsed by Blizzard Entertainment or Turtle WoW.
+World of Warcraft and related marks belong to their respective owners.
+
+## Licence
+
+Released under the [MIT License](LICENSE).
