@@ -221,7 +221,7 @@ The addon is statically and behavior tested in development, but still needs its 
 This repository contains client-addon source code, project artwork and
 documentation screenshots. It does not distribute game-client binaries or
 extracted game-data/texture files, provide hosting, or operate a game service.
-It is not affiliated with or endorsed by Blizzard Entertainment or Turtle WoW.
+It is not affiliated with or endorsed by Blizzard Entertainment or Tortoise WoW.
 World of Warcraft and related marks belong to their respective owners.
 
 ## Licence
