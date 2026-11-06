@@ -124,7 +124,7 @@ WoW loads any folder that contains a `.toc` file, so the folder name does not ne
 5. On the character-selection screen, open **AddOns** and enable **TortoiseGMManager**.
 6. If the client marks it as outdated, enable **Load out of date AddOns**. The manifest targets Vanilla interface `11200`.
 7. Log into a GM character.
-8. Click the gear icon next to the minimap, or run:
+8. Click the hammer icon next to the minimap, or run:
 
 ```text
 /tgmm

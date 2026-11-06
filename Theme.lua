@@ -158,13 +158,25 @@ function Theme.Window(frame, options)
     headerLine:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -headerHeight)
     headerLine:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -headerHeight)
 
-    local icon = Theme.Icon(frame, 26)
-    icon:SetPoint("TOPLEFT", frame, "TOPLEFT", 14, -math.floor((headerHeight - 26) / 2) - 1)
+    -- Brand mark: a slightly larger icon with a two-line title block
+    -- (name on top, muted meta line below), matching TortoiseBotsManager.
+    local iconSize = options.subtitle and 30 or 26
+    local icon = Theme.Icon(frame, iconSize)
+    icon:SetPoint("TOPLEFT", frame, "TOPLEFT", 14, -math.floor((headerHeight - iconSize) / 2) - 1)
     icon:SetTexture(options.icon or "Interface\\Icons\\INV_Misc_Gear_01")
+    icon:SetBorderColor(C.goldDim[1], C.goldDim[2], C.goldDim[3], 1)
 
     local title = Theme.Text(frame, 14, C.gold)
-    title:SetPoint("LEFT", icon, "RIGHT", 10, 0)
     title:SetText(options.title or "")
+    local subtitle
+    if options.subtitle then
+        title:SetPoint("TOPLEFT", icon, "TOPRIGHT", 10, 1)
+        subtitle = Theme.Text(frame, 10, C.muted)
+        subtitle:SetPoint("BOTTOMLEFT", icon, "BOTTOMRIGHT", 10, 0)
+        subtitle:SetText(options.subtitle)
+    else
+        title:SetPoint("LEFT", icon, "RIGHT", 10, 0)
+    end
 
     local close = Theme.IconButton(frame, 22, "X")
     close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -11, -math.floor((headerHeight - 22) / 2) - 1)
@@ -172,7 +184,7 @@ function Theme.Window(frame, options)
     close:SetScript("OnEnter", function() Theme.SetTextColor(this.text, C.red) end)
     close:SetScript("OnLeave", function() Theme.PaintButton(this) end)
 
-    frame.headerIcon, frame.headerTitle, frame.closeButton = icon, title, close
+    frame.headerIcon, frame.headerTitle, frame.headerSubtitle, frame.closeButton = icon, title, subtitle, close
     return frame
 end
 

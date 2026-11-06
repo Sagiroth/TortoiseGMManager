@@ -98,7 +98,7 @@ local frame = CreateFrame("Frame", "TortoiseGMManagerLookupResultsFrame", UIPare
 frame:SetWidth(RESULT_WIDTH); frame:SetHeight(RESULT_HEIGHT); frame:SetFrameStrata("DIALOG"); frame:SetMovable(true)
 frame:EnableMouse(true); frame:EnableMouseWheel(true); frame:RegisterForDrag("LeftButton")
 frame:SetScript("OnDragStart", function() this:StartMoving() end); frame:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
-Theme.Window(frame, { title = "Lookup Results", icon = "Interface\\Icons\\INV_Misc_Spyglass_03", headerHeight = HEADER_HEIGHT })
+Theme.Window(frame, { title = "Lookup Results", subtitle = "Server lookup · pick a result to act on it", icon = "Interface\\Icons\\INV_Misc_Spyglass_03", headerHeight = HEADER_HEIGHT })
 frame:Hide(); TortoiseGMManager.lookupResultsFrame = frame
 if TortoiseGMManager.frame then frame:SetPoint("TOPLEFT", TortoiseGMManager.frame, "TOPRIGHT", 10, 0) else frame:SetPoint("CENTER", UIParent, "CENTER", 280, 0) end
 if UISpecialFrames then table.insert(UISpecialFrames, "TortoiseGMManagerLookupResultsFrame") end

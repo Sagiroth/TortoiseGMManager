@@ -130,14 +130,19 @@ main:EnableMouseWheel(true)
 main:RegisterForDrag("LeftButton")
 main:SetScript("OnDragStart", function() this:StartMoving() end)
 main:SetScript("OnDragStop", function() this:StopMovingOrSizing(); saveMainPosition(this) end)
-Theme.Window(main, { title = "TortoiseGMManager", icon = "Interface\\Icons\\INV_Misc_Gear_01", headerHeight = HEADER_HEIGHT })
+-- Same brand pattern as TortoiseBotsManager: two-tone name + version, and a
+-- meta line underneath. The "ban hammer" (Sulfuras) marks the GM tool.
+local BRAND_ICON = "Interface\\Icons\\INV_Hammer_Unique_Sulfuras"
+local version = tostring(TortoiseGMManager.version or "?")
+Theme.Window(main, {
+    title = "|cffd8a657Tortoise|r|cff6cb8ffGM|r |cfffff2ccManager|r  |cffffd200v" .. version .. "|r",
+    subtitle = "TGMM " .. version .. " · GM command palette · by Sagiroth",
+    icon = BRAND_ICON,
+    headerHeight = HEADER_HEIGHT,
+})
 main:Hide()
 TortoiseGMManager.frame = main
 if UISpecialFrames then table.insert(UISpecialFrames, "TortoiseGMManagerFrame") end
-
-local versionBadge = Theme.Badge(main)
-versionBadge:SetPoint("LEFT", main.headerTitle, "RIGHT", 8, 0)
-Theme.SetBadge(versionBadge, "v" .. (TortoiseGMManager.version or "?"), COLORS.muted)
 
 -- Target indicator: a pill with a live dot, right-aligned next to close.
 local targetPill = CreateFrame("Frame", nil, main)
@@ -1005,7 +1010,7 @@ minimapButton:SetPoint("CENTER", Minimap, "CENTER", TortoiseGMManagerDB.minimapX
 minimapButton:RegisterForClicks("LeftButtonUp"); minimapButton:RegisterForDrag("LeftButton")
 local minimapIcon = minimapButton:CreateTexture(nil, "BACKGROUND")
 minimapIcon:SetWidth(20); minimapIcon:SetHeight(20); minimapIcon:SetPoint("CENTER", minimapButton, "CENTER", 0, 0)
-minimapIcon:SetTexture("Interface\\Icons\\INV_Misc_Gear_01"); minimapIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+minimapIcon:SetTexture(BRAND_ICON); minimapIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 local minimapBorder = minimapButton:CreateTexture(nil, "OVERLAY")
 minimapBorder:SetWidth(52); minimapBorder:SetHeight(52); minimapBorder:SetPoint("TOPLEFT", minimapButton, "TOPLEFT", 0, 0)
 minimapBorder:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
@@ -1068,6 +1073,6 @@ eventFrame:SetScript("OnEvent", function()
         TortoiseGMManager.currentCategory = TortoiseGMManager.GetDefaultCategory()
         TortoiseGMManagerDB.lastCategory = TortoiseGMManager.currentCategory
         restoreSavedPositions()
-        TortoiseGMManager.RefreshCategoryButtons(); TortoiseGMManager.RefreshList(); TortoiseGMManager.Print("Loaded. Click the minimap gear or use /tgmm.")
+        TortoiseGMManager.RefreshCategoryButtons(); TortoiseGMManager.RefreshList(); TortoiseGMManager.Print("Loaded. Click the minimap hammer or use /tgmm.")
     elseif event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_TARGET_CHANGED" then TortoiseGMManager.RefreshTarget() end
 end)
