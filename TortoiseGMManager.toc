@@ -6,6 +6,7 @@
 ## SavedVariables: TortoiseGMManagerDB
 
 Data.lua
+Theme.lua
 Core.lua
 Lookup.lua
 UI.lua
