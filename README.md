@@ -35,10 +35,12 @@ The addon is **client-side only**. It does not connect directly to MariaDB and d
 - **Filter actions** searches the catalogue with label-first ranking; it never changes the executable command.
 - Uses stock interface icons and textures provided by the installed Vanilla WoW client; no game texture files are bundled, and no Ace or LibDBIcon dependency is required.
 - The exact GM command is shown in a read-only preview before execution; purpose-specific controls build it safely.
-- Current target is shown in the header.
+- Current target is shown in the header with a live indicator.
+- Flat, consistent visual system (`Theme.lua`): one gold accent, semantic colours for lookup (blue), danger (red) and success (green), underlined category tabs, LOOKUP/DANGER badges, a status bar, and empty states that explain what to do next.
+- The composer header shows the selected action's name, description and access level; dangerous commands turn **EXECUTE** red and show a live **CONFIRM** countdown while armed.
 - Detailed descriptions, access levels and argument help live in hover tooltips instead of filling the panel.
 - `?` asks the server for `.help <command>`.
-- Add or remove frequently used actions with each row's `+`/`-` control; favourites and window/minimap positions persist in `TortoiseGMManagerDB`.
+- Add or remove frequently used actions with each row's star; favourites and window/minimap positions persist in `TortoiseGMManagerDB`.
 - Argument-free safe actions use one-click **RUN NOW**; simple state commands expose direct **ON/OFF** buttons; configurable actions open typed number, text, and lookup-ID controls.
 - Persistent/destructive operations require the exact same command to be **EXECUTE**d twice within five seconds.
 - Esc closes addon windows through Vanilla `UISpecialFrames`.
@@ -122,7 +124,7 @@ WoW loads any folder that contains a `.toc` file, so the folder name does not ne
 5. On the character-selection screen, open **AddOns** and enable **TortoiseGMManager**.
 6. If the client marks it as outdated, enable **Load out of date AddOns**. The manifest targets Vanilla interface `11200`.
 7. Log into a GM character.
-8. Click the gear icon next to the minimap, or run:
+8. Click the hammer icon next to the minimap, or run:
 
 ```text
 /tgmm
@@ -189,6 +191,7 @@ The addon files live at the repository root:
 ```text
 TortoiseGMManager.toc
 Data.lua        command catalogue and danger policy
+Theme.lua       shared visual system: colours, buttons, tabs, inputs, badges
 Core.lua        execution, history, help and confirmation logic
 Lookup.lua      lookup lifecycle and CHAT_MSG_SYSTEM parser
 UI.lua          compact main palette and minimap launcher
@@ -208,6 +211,7 @@ npx --yes --package fengari-node-cli fengari tests/lookup_spec.lua
 python3 tests/verify_server_catalog.py
 
 npx --yes luaparse -q Data.lua
+npx --yes luaparse -q Theme.lua
 npx --yes luaparse -q Core.lua
 npx --yes luaparse -q Lookup.lua
 npx --yes luaparse -q UI.lua
