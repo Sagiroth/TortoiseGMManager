@@ -8,21 +8,13 @@ The addon is **client-side only**. It does not connect directly to MariaDB and d
 
 ## Screenshots
 
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <img src="assets/screenshots/favourites.webp" alt="Favourite commands tab" width="440"><br>
-      <sub><b>Favourites</b> — keep frequently used actions together.</sub>
-    </td>
-    <td width="50%" align="center">
-      <img src="assets/screenshots/search.webp" alt="Command search results" width="440"><br>
-      <sub><b>Search</b> — filter the command catalogue as you type.</sub>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/design-preview/search-configure.webp" alt="Command search and configure" width="440"><br>
+  <sub><b>Search</b> — filter the command catalogue as you type and fill in the selected command.</sub>
+</p>
 
 <p align="center">
-  <img src="assets/screenshots/item-lookup.webp" alt="Item lookup results and tooltip" width="760"><br>
+  <img src="docs/design-preview/item-lookup.webp" alt="Item lookup results" width="760"><br>
   <sub><b>Item lookup</b> — search by partial name, inspect item details, and act on the selected result.</sub>
 </p>
 
